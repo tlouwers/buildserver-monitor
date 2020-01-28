@@ -21,7 +21,7 @@
 #define BUILDSERVER_MONITOR_CONFIG_H_
 
 #ifdef __cplusplus
-  extern "C" {
+extern "C" {
 #endif
 
 /************************************************************************/
@@ -36,6 +36,11 @@
 /************************************************************************/
 // Version
 static const char versionString[] = "Buildserver Monitor v0.1";
+
+// WiFi network
+static const uint32_t WIFI_TIMEOUT_MAXIMUM = 15000;    // In milliseconds
+const char* ssid     = "<YOUR_SSID_HERE>";
+const char* password = "<YOUR_PASSWD_HERE>";
 
 // Available log levels
 #define LOG_LEVEL_OFF      1
