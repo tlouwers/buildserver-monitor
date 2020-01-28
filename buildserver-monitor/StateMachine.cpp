@@ -27,28 +27,48 @@
 /************************************************************************/
 /* Public Methods                                                       */
 /************************************************************************/
+/**
+ * \brief   Constructor.
+ * \param   logger      Logging class.
+ */
 StateMachine::StateMachine(ILogging& logger) :
     mLogger(logger),
     mState(State::StartUp)    // Initial state
 { ; }
 
+/**
+ * \brief   Method to retrieve the current state.
+ * \returns The current state.
+ */
 State StateMachine::GetState() const
 {
     return mState;
 }
 
+/**
+ * \brief   Hook method for a state entry event.
+ * \param   state   The state being entered.
+ */
 void StateMachine::StateEntry(State state)
 {
     std::string message = "State entry: " + mStateTypes[static_cast<uint8_t>(state)];
     mLogger.Log(LogLevel::ALL, message.c_str());
 }
 
+/**
+ * \brief   Hook method for a state exit event.
+ * \param   state   The state being exit.
+ */
 void StateMachine::StateExit(State state)
 {
     std::string message = "State exit: " + mStateTypes[static_cast<uint8_t>(mState)];
     mLogger.Log(LogLevel::ALL, message.c_str());
 }
 
+/**
+ * \brief   Method to change the state of the state machine.
+ * \param   newState  The new state to set.
+ */
 void StateMachine::SetState(State newState)
 {
     if (mState != newState)

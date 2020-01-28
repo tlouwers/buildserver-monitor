@@ -34,6 +34,11 @@ Application::Application() :
     ;
 }
 
+/**
+ * \brief   Initialize the various peripherals, configures components and show
+ *          the user the application is starting using the leds.
+ * \returns True if init is successful, else false.
+ */
 bool Application::Init()
 {
     bool result = false;
@@ -47,6 +52,10 @@ bool Application::Init()
     return result;
 }
 
+/**
+ * \brief   Replacement for the main loop of the application: this handles the
+ *          state machine and transitions in its Process loop.
+ */
 void Application::Process()
 {
     switch (mSM.GetState())
@@ -67,8 +76,11 @@ void Application::Process()
 
 
 /************************************************************************/
-/* Public Methods                                                       */
+/* Private Methods                                                      */
 /************************************************************************/
+/**
+ * \brief   Worker method for the StartUp state.
+ */
 void Application::HandleStartUp()
 {
     mLogger.Log(LogLevel::INFO, "Handling StartUp");
@@ -80,6 +92,9 @@ void Application::HandleStartUp()
     mSM.SetState(State::Idle);
 }
 
+/**
+ * \brief   Worker method for the Idle state.
+ */
 void Application::HandleIdle()
 {
     mLogger.Log(LogLevel::INFO, "Handling Idle");
@@ -91,6 +106,9 @@ void Application::HandleIdle()
     // Else: remain Idle
 }
 
+/**
+ * \brief   Worker method for the Connected state.
+ */
 void Application::HandleConnected()
 {
     mLogger.Log(LogLevel::INFO, "Handling Connected");
@@ -105,6 +123,9 @@ void Application::HandleConnected()
     }
 }
 
+/**
+ * \brief   Worker method for the Parsing state.
+ */
 void Application::HandleParsing()
 {
     mLogger.Log(LogLevel::INFO, "Handling Parsing");
@@ -119,6 +140,9 @@ void Application::HandleParsing()
     }
 }
 
+/**
+ * \brief   Worker method for the Displaying state.
+ */
 void Application::HandleDisplaying()
 {
     mLogger.Log(LogLevel::INFO, "Handling Displaying");
@@ -133,6 +157,9 @@ void Application::HandleDisplaying()
     }
 }
 
+/**
+ * \brief   Worker method for the Sleeping state.
+ */
 void Application::HandleSleeping()
 {
     mLogger.Log(LogLevel::INFO, "Handling Sleeping");
@@ -144,6 +171,9 @@ void Application::HandleSleeping()
     mSM.SetState(State::Idle);
 }
 
+/**
+ * \brief   Worker method for the Error state.
+ */
 void Application::HandleError()
 {
     mLogger.Log(LogLevel::INFO, "Handling Error");
@@ -155,6 +185,10 @@ void Application::HandleError()
     mSM.SetState(State::Idle);
 }
 
+/**
+ * \brief   Dummy method to mimic an attempt to connect to the WiFi network.
+ * \returns True, always.
+ */
 bool Application::TryConnect()
 {
     mLogger.Log(LogLevel::INFO, "Trying to connect...");
@@ -166,6 +200,10 @@ bool Application::TryConnect()
     return true;
 }
 
+/**
+ * \brief   Dummy method to mimic an attempt to acquire data from buildserver.
+ * \returns True, always.
+ */
 bool Application::TryAcquiring()
 {
     mLogger.Log(LogLevel::INFO, "Trying to acquire...");
@@ -177,6 +215,10 @@ bool Application::TryAcquiring()
     return true;
 }
 
+/**
+ * \brief   Dummy method to mimic an attempt to parse buildserver data and retrieve a build status.
+ * \returns True, always.
+ */
 bool Application::TryParsing()
 {
     mLogger.Log(LogLevel::INFO, "Trying to parse...");
@@ -188,6 +230,10 @@ bool Application::TryParsing()
     return true;
 }
 
+/**
+ * \brief   Dummy method to mimic display of the found build status.
+ * \returns True, always.
+ */
 bool Application::TryDisplaying()
 {
     mLogger.Log(LogLevel::INFO, "Trying to display...");

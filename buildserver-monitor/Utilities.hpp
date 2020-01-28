@@ -28,6 +28,12 @@
 /************************************************************************/
 /* Template functions                                                   */
 /************************************************************************/
+/**
+ * \brief   Converts a number to a string.
+ * \details Work-around for the missing std::to_string() method.
+ * \param   number    The number to convert.
+ * \returns The number as string.
+ */
 template <typename T>
 std::string NumberToString(T number)
 {

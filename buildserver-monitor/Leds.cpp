@@ -40,14 +40,29 @@ static Adafruit_NeoPixel mStrip(NUMBER_OF_NEOPIXELS, PIN_NEOPIXEL_DATA, NEO_GRB 
 /************************************************************************/
 /**
  * \brief   Constructor.
+ * \param   logger    Logging class.
  */
 Leds::Leds(ILogging& logger) :
-  mLogger(logger)
+  mLogger(logger),
+  mInitialized(false)
 { ; }
 
+/**
+ * \brief   Destructor. Turns leds off it initialized before.
+ */
 Leds::~Leds()
-{ ; }
+{
+    if (mInitialized)
+    {
+        SetColor(LedColor::Off);
+    }
+    mInitialized = false;
+}
 
+/**
+ * \brief   Initialized the leds with color off.
+ * \returns True if init succesful, else false.
+ */
 bool Leds::Init()
 {
     // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
@@ -56,46 +71,84 @@ bool Leds::Init()
         clock_prescale_set(clock_div_1);
     #endif
 
-    if (NUMBER_OF_NEOPIXELS > 0)
+    if (!mInitialized)
     {
-        mLogger.Log(LogLevel::INFO, "All leds off");
-        mStrip.begin();             // INITIALIZE NeoPixel strip object (REQUIRED)
-        mStrip.show();              // Turn OFF all pixels ASAP
-        return true;
+        if (NUMBER_OF_NEOPIXELS > 0)
+        {
+            mLogger.Log(LogLevel::INFO, "All leds off");
+            mStrip.begin();             // INITIALIZE NeoPixel strip object (REQUIRED)
+            mStrip.show();              // Turn OFF all pixels ASAP
+            mInitialized = true;
+            return true;
+        }
+        else
+        {
+            mLogger.Log(LogLevel::ERROR, "No leds configured!");
+            return false;
+        }
     }
     else
     {
-        mLogger.Log(LogLevel::ERROR, "No leds configured!");
-        return false;
+        mLogger.Log(LogLevel::INFO, "Already initialized the leds");
+        SetColor(LedColor::Off);
+        return true;
     }
 }
 
+/**
+ * \brief   Set all leds to the given color.
+ * \param   color   The color to set.
+ */
 void Leds::SetColor(LedColor color)
 {
-    std::string message = "Set all leds to color [" + mLedColorTypes[static_cast<uint8_t>(color)] + "]";
-    mLogger.Log(LogLevel::ALL, message.c_str());
-
-    mStrip.fill(ConvertColor(color), 0, NUMBER_OF_NEOPIXELS);
-    mStrip.show();
-}
-
-void Leds::SetColor(uint8_t led_number, LedColor color)
-{
-    if (led_number > 0)
+    if (mInitialized)
     {
-        std::string message = "Set led [" + NumberToString(led_number) + "] to color [" + mLedColorTypes[static_cast<uint8_t>(color)] + "]";
+        std::string message = "Set all leds to color [" + mLedColorTypes[static_cast<uint8_t>(color)] + "]";
         mLogger.Log(LogLevel::ALL, message.c_str());
-        
-        // Number is 1 higer than the index of the led in the strand
-        mStrip.setPixelColor(led_number - 1, ConvertColor(color));
+
+        mStrip.fill(ConvertColor(color), 0, NUMBER_OF_NEOPIXELS);
         mStrip.show();
     }
     else
     {
-        mLogger.Log(LogLevel::ERROR, "Invalid led number!");
+        mLogger.Log(LogLevel::WARNING, "Leds not initialized");
     }
 }
 
+/**
+ * \brief   Set the given led to the given color.
+ * \param   led_number  The number of the led in the strain to set.
+ * \param   color       The color to set.
+ */
+void Leds::SetColor(uint8_t led_number, LedColor color)
+{
+    if (mInitialized)
+    {
+        if (led_number > 0)
+        {
+            std::string message = "Set led [" + NumberToString(led_number) + "] to color [" + mLedColorTypes[static_cast<uint8_t>(color)] + "]";
+            mLogger.Log(LogLevel::ALL, message.c_str());
+            
+            // Number is 1 higer than the index of the led in the strand
+            mStrip.setPixelColor(led_number - 1, ConvertColor(color));
+            mStrip.show();
+        }
+        else
+        {
+            mLogger.Log(LogLevel::ERROR, "Invalid led number!");
+        }
+    }
+    else
+    {
+        mLogger.Log(LogLevel::WARNING, "Leds not initialized");
+    }
+}
+
+/**
+ * \brief   Convert a LedColor to a uint32_t, which represents a compacted color struct.
+ * \param   color   The color to convert.
+ * \returns A uint32_t value representing the compacted color struct.
+ */
 uint32_t Leds::ConvertColor(LedColor color)
 {
     uint32_t colorCode = 0;

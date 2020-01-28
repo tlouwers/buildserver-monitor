@@ -68,6 +68,7 @@ public:
 
 private:
     ILogging& mLogger;
+    bool      mInitialized;
 
     uint32_t ConvertColor(LedColor color);
 
