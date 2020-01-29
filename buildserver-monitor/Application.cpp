@@ -18,6 +18,7 @@
 /* Includes                                                             */
 /************************************************************************/
 #include <Arduino.h>
+#include "wifi_config.h"
 #include "Application.hpp"
 
 
@@ -29,10 +30,9 @@
  */
 Application::Application() :
     mLeds(mLogger),
-    mSM(mLogger)
-{
-    ;
-}
+    mSM(mLogger),
+    mWifi(mLogger)
+{ ; }
 
 /**
  * \brief   Initialize the various peripherals, configures components and show
@@ -103,7 +103,10 @@ void Application::HandleIdle()
     {
         mSM.SetState(State::Connected);
     }
-    // Else: remain Idle
+    else
+    {
+        mSM.SetState(State::Error);
+    }
 }
 
 /**
@@ -149,6 +152,11 @@ void Application::HandleDisplaying()
 
     if (TryDisplaying())
     {
+        if (mWifi.IsConnected())
+        {
+            mWifi.Disconnect();
+        }
+      
         mSM.SetState(State::Sleeping);
     }
     else
@@ -182,6 +190,9 @@ void Application::HandleError()
     delay(1000);
     mLeds.SetColor(LedColor::Off);
 
+    // Discuss: move to Sleeping state first? This would turn off WiFi/Leds/...
+    delay(4000);
+
     mSM.SetState(State::Idle);
 }
 
@@ -194,10 +205,17 @@ bool Application::TryConnect()
     mLogger.Log(LogLevel::INFO, "Trying to connect...");
 
     mLeds.SetColor(2, LedColor::Purple);
-    delay(1000);
-    mLeds.SetColor(LedColor::Off);
 
-    return true;
+    bool isConnected = mWifi.IsConnected();
+    
+    if (!isConnected)
+    {
+        isConnected = mWifi.Connect(WIFI_CONNECTION_TIMEOUT);   // Can take some time (seconds)!
+    }
+
+    mLeds.SetColor(LedColor::Off);
+    
+    return isConnected;
 }
 
 /**

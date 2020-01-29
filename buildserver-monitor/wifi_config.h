@@ -1,5 +1,5 @@
 /**
- * \file config.h
+ * \file wifi_config.h
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -8,17 +8,18 @@
  *          a beer in return.
  *                                                                Terry Louwers
  *
- * \brief   General configuration file for the Buildserver Monitor.
+ * \brief   WiFi configuration file for the Buildserver Monitor.
  *
- * \details Intended use is to list the various options and settings as configurable
- *          items for the Buildserver Monitor.
+ * \details Intended use is to hold the environment specific parts of the WiFi
+ *          configuration, things that need to be altered for a given buildserver
+ *          environment.
  *
  * \author  T. Louwers <terry.louwers@fourtress.nl>
  * \date    01-2020
  */
 
-#ifndef BUILDSERVER_MONITOR_CONFIG_H_
-#define BUILDSERVER_MONITOR_CONFIG_H_
+#ifndef BUILDSERVER_MONITOR_WIFI_CONFIG_H_
+#define BUILDSERVER_MONITOR_WIFI_CONFIG_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,26 +35,19 @@ extern "C" {
 /************************************************************************/
 /* Configurable options                                                 */
 /************************************************************************/
-// Version
-static const char versionString[] = "Buildserver Monitor v0.1";
+// Timeouts
+static const uint32_t WIFI_CONNECTION_TIMEOUT = 15000;        // In milliseconds.
 
-// Available log levels
-#define LOG_LEVEL_OFF      1
-#define LOG_LEVEL_ERROR    2
-#define LOG_LEVEL_WARNING  3
-#define LOG_LEVEL_INFO     4
-#define LOG_LEVEL_ALL      5
+// Retries
+static const uint8_t  WIFI_NUMBER_OF_RETRIES  = 2;            // Connection retry attempts if initial connection attempt fails.
 
-#define LOG_LEVEL    LOG_LEVEL_INFO
-
-
-// Leds (NeoPixels)
-#define PIN_NEOPIXEL_DATA     2       // GPIO_2, pin on the ESP8266 (ESP-01) used as data line for the NeoPixels.
-#define NUMBER_OF_NEOPIXELS   8       // Must match the connected number of NeoPixels in the strand. 
+// Network
+static const char*    WIFI_SSID     = "<YOUR_SSID_HERE>";     // The SSID of the WiFi network to connect to.
+static const char*    WIFI_PASSWORD = "<YOUR_PASSWD_HERE>";   // The password of the WiFi network to connect to.
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // BUILDSERVER_MONITOR_CONFIG_H_
+#endif  // BUILDSERVER_MONITOR_WIFI_CONFIG_H_
