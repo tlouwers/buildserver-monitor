@@ -22,6 +22,7 @@
 /************************************************************************/
 #include <string>
 #include "config.h"
+#include "wifi_config.h"
 #include "WifiConnection.hpp"
 #include <ESP8266WiFi.h>
 
@@ -72,10 +73,16 @@ bool WifiConnection::Connect(uint32_t timeout_ms)
         return true;
     }
 
+    if (timeout_ms > WIFI_CONNECTION_TIMEOUT)
+    {
+        timeout_ms = WIFI_CONNECTION_TIMEOUT;
+        mLogger.Log(LogLevel::INFO, "Restricting maximum WiFi timeout to configured value");
+    }
+
     bool result = false;
     if (CheckValidSSIDAndPassword())
     {
-        WiFi.begin(ssid, password);
+        WiFi.begin(SSID, PASSWORD);
 
         uint32_t waited_ms = 0;
         while (waited_ms < timeout_ms)
@@ -130,8 +137,8 @@ bool WifiConnection::Disconnect()
  */
 bool WifiConnection::CheckValidSSIDAndPassword()
 {
-    std::string configured_ssid(ssid);
-    std::string configured_password(password);
+    std::string configured_ssid(SSID);
+    std::string configured_password(PASSWORD);
 
     if ( (configured_ssid.compare("<YOUR_SSID_HERE>") == 0) ||
          (configured_ssid.compare("") == 0) )

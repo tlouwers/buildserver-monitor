@@ -18,6 +18,7 @@
 /* Includes                                                             */
 /************************************************************************/
 #include <Arduino.h>
+#include "wifi_config.h"
 #include "Application.hpp"
 
 
@@ -189,6 +190,9 @@ void Application::HandleError()
     delay(1000);
     mLeds.SetColor(LedColor::Off);
 
+    // Discuss: move to Sleeping state first? This would turn off WiFi/Leds/...
+    delay(4000);
+
     mSM.SetState(State::Idle);
 }
 
@@ -206,7 +210,7 @@ bool Application::TryConnect()
     
     if (!isConnected)
     {
-        isConnected = mWifi.Connect(WIFI_TIMEOUT_MAXIMUM);   // Can take some time!
+        isConnected = mWifi.Connect(WIFI_CONNECTION_TIMEOUT);   // Can take some time (seconds)!
     }
 
     mLeds.SetColor(LedColor::Off);

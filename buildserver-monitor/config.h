@@ -38,9 +38,9 @@ extern "C" {
 static const char versionString[] = "Buildserver Monitor v0.1";
 
 // WiFi network
-static const uint32_t WIFI_TIMEOUT_MAXIMUM = 15000;    // In milliseconds
-const char* ssid     = "<YOUR_SSID_HERE>";
-const char* password = "<YOUR_PASSWD_HERE>";
+static const uint32_t WIFI_TIMEOUT_MAXIMUM = 15000;     // In milliseconds.
+static const char*    SSID     = "<YOUR_SSID_HERE>";    // The SSID of the WiFi network to connect to.
+static const char*    PASSWORD = "<YOUR_PASSWD_HERE>";  // The password of the WiFi network to connect to.
 
 // Available log levels
 #define LOG_LEVEL_OFF      1
@@ -54,7 +54,7 @@ const char* password = "<YOUR_PASSWD_HERE>";
 
 // Leds (NeoPixels)
 #define PIN_NEOPIXEL_DATA     2       // GPIO_2, pin on the ESP8266 (ESP-01) used as data line for the NeoPixels.
-#define NUMBER_OF_NEOPIXELS   5       // Must match the connected number of NeoPixels in the strand. 
+#define NUMBER_OF_NEOPIXELS   8       // Must match the connected number of NeoPixels in the strand. 
 
 
 #ifdef __cplusplus
