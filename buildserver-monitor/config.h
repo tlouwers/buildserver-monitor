@@ -37,11 +37,6 @@ extern "C" {
 // Version
 static const char versionString[] = "Buildserver Monitor v0.1";
 
-// WiFi network
-static const uint32_t WIFI_TIMEOUT_MAXIMUM = 15000;     // In milliseconds.
-static const char*    SSID     = "<YOUR_SSID_HERE>";    // The SSID of the WiFi network to connect to.
-static const char*    PASSWORD = "<YOUR_PASSWD_HERE>";  // The password of the WiFi network to connect to.
-
 // Available log levels
 #define LOG_LEVEL_OFF      1
 #define LOG_LEVEL_ERROR    2

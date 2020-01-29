@@ -80,16 +80,11 @@ bool WifiConnection::Connect(uint32_t timeout_ms)
     }
 
     bool result = false;
-    if (CheckValidSSIDAndPassword())
+    if (CheckValidSSIDAndPassword(WIFI_SSID, WIFI_PASSWORD))    // Note: these values are taken from the 'wifi_config.h' file.
     {
-        WiFi.begin(SSID, PASSWORD);
-
-        uint32_t waited_ms = 0;
-        while (waited_ms < timeout_ms)
+        for (uint8_t i = 0; i < WIFI_NUMBER_OF_RETRIES; i++)
         {
-            waited_ms += TIMEOUT_INCREMENT;
-
-            if (WiFi.status() == WL_CONNECTED)
+            if (ConnectionAttempt(timeout_ms))
             {
                 std::string ipString( WiFi.localIP().toString().c_str() );
                 std::string message = "WiFi connected to: [" + ipString + "]";
@@ -97,6 +92,11 @@ bool WifiConnection::Connect(uint32_t timeout_ms)
                 mConnected = true;
                 result = true;
                 break;
+            }
+            else
+            {
+                mLogger.Log(LogLevel::INFO, "Attempt failed, retry...");
+                delay(250);
             }
         }
     }
@@ -118,11 +118,9 @@ bool WifiConnection::IsConnected() const
  */
 bool WifiConnection::Disconnect()
 {
-    if (mConnected)
-    {
-        WiFi.disconnect();
-        mConnected = false;
-    }
+    WiFi.disconnect();
+    mConnected = false;
+
     return true;
 }
 
@@ -132,13 +130,23 @@ bool WifiConnection::Disconnect()
 /************************************************************************/
 /**
  * \brief   Basic check to prevent the default or empty SSID and password.
- * \details These values are taken from the main config file.
- * \returns True if the SSID and password are filled and not default.
+ * \param   ssid      The WiFi SSID to check.
+ * \param   password  The WiFi password to check.
+ * \returns True if ssid and password are filled and not default.
  */
-bool WifiConnection::CheckValidSSIDAndPassword()
+bool WifiConnection::CheckValidSSIDAndPassword(const char* ssid, const char* password)
 {
-    std::string configured_ssid(SSID);
-    std::string configured_password(PASSWORD);
+    if (ssid == NULL)
+    {
+        mLogger.Log(LogLevel::ERROR, "Empty pointer for ssid");
+    }
+    if (password == NULL)
+    {
+        mLogger.Log(LogLevel::ERROR, "Empty pointer for password");
+    }
+  
+    std::string configured_ssid(ssid);
+    std::string configured_password(password);
 
     if ( (configured_ssid.compare("<YOUR_SSID_HERE>") == 0) ||
          (configured_ssid.compare("") == 0) )
@@ -155,4 +163,32 @@ bool WifiConnection::CheckValidSSIDAndPassword()
     }
 
     return true;
+}
+
+/**
+ * \brief   Try to connect to WiFi, stop attempt after given timeout.
+ * \param   timeout_ms    The maximum time to try to connect to WiFi.
+ * \returns True if connected to WiFi, else false.
+ */
+bool WifiConnection::ConnectionAttempt(uint32_t timeout_ms)
+{
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+    if (!WiFi.isConnected())
+    {
+        WiFi.reconnect();
+        WiFi.waitForConnectResult(timeout_ms);
+    }
+
+    // Check status: on failure cleanup first
+    if (WiFi.isConnected())
+    {
+        return true;    // Happy case...
+    }
+    else
+    {
+        WiFi.disconnect();
+        return false;
+    }
 }
