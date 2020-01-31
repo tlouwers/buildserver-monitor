@@ -26,7 +26,6 @@
 #else
     #include "FakeLeds.hpp"
 #endif
-#include "FakeLeds.hpp"
 #include "Logging.hpp"
 #include "StateMachine.hpp"
 #include "WifiConnection.hpp"
