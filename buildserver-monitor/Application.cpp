@@ -31,8 +31,12 @@
 Application::Application() :
     mLeds(mLogger),
     mSM(mLogger),
-    mWifi(mLogger)
-{ ; }
+    mWifi(mLogger),
+    mHttp(mLogger),
+    mState(BuildState::NoState)
+{ 
+  ; 
+}
 
 /**
  * \brief   Initialize the various peripherals, configures components and show
@@ -41,11 +45,12 @@ Application::Application() :
  */
 bool Application::Init()
 {
-    bool result = false;
+    bool result = true;
   
     mLogger.Log(LogLevel::INFO, versionString);
 
-    result = mLeds.Init();
+    if(!mLeds.Init()) { result = false; }
+    if(!mHttp.Init()) { result = false; }
 
     delay(1000);
 
@@ -228,9 +233,13 @@ bool Application::TryAcquiring()
 
     mLeds.SetColor(3, LedColor::Blue);
     delay(1000);
+
+    bool result = mHttp.Acquire();
+    Serial.println("hello there");
+    
     mLeds.SetColor(LedColor::Off);
 
-    return true;
+    return result;
 }
 
 /**
@@ -243,9 +252,16 @@ bool Application::TryParsing()
 
     mLeds.SetColor(4, LedColor::Red);
     delay(1000);
+
+    bool result = mHttp.Parse();
+    if (!result) { return false; }
+
+    mState = mHttp.getBuildState();
+    Serial.println(int(mState));
+    
     mLeds.SetColor(LedColor::Off);
 
-    return true;
+    return result;
 }
 
 /**
@@ -256,24 +272,21 @@ bool Application::TryDisplaying()
 {
     mLogger.Log(LogLevel::INFO, "Trying to display...");
 
-    for (uint8_t i = 0; i < 5; i++)
+    switch (mState)
     {
-        mLeds.SetColor(LedColor::White);
-        delay(150);
-        mLeds.SetColor(LedColor::Green);
-        delay(150);
-        mLeds.SetColor(LedColor::Blue);
-        delay(150);
-        mLeds.SetColor(LedColor::Purple);
-        delay(150);
-        mLeds.SetColor(LedColor::Red);
-        delay(150);
-        mLeds.SetColor(LedColor::Orange);
-        delay(150);
-        mLeds.SetColor(LedColor::Yellow);
-        delay(150);
+        case BuildState::Success:   mLeds.SetColor(LedColor::Green); break;
+        case BuildState::Unstable:  mLeds.SetColor(LedColor::Yellow); break;
+        case BuildState::Failure:   mLeds.SetColor(LedColor::Red); break;
+        case BuildState::Aborted:   mLeds.SetColor(LedColor::Blue); break;
+        case BuildState::NotBuild:  mLeds.SetColor(LedColor::Purple); break;
+        case BuildState::NoState:   mLeds.SetColor(LedColor::White); break;
+        default:   
+            break;
     }
+    delay(1000);
     mLeds.SetColor(LedColor::Off);
+
+    mState = BuildState::NoState;
 
     return true;
 }
