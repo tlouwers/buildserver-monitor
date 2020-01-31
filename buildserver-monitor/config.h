@@ -52,6 +52,13 @@ static const char versionString[] = "Buildserver Monitor v0.1";
 #define NUMBER_OF_NEOPIXELS   8       // Must match the connected number of NeoPixels in the strand. 
 
 
+#define REAL        1
+#define SIMULATED   2
+
+// Simulation
+#define LEDS  REAL
+
+
 #ifdef __cplusplus
 }
 #endif

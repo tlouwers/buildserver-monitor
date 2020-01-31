@@ -43,8 +43,8 @@ static Adafruit_NeoPixel mStrip(NUMBER_OF_NEOPIXELS, PIN_NEOPIXEL_DATA, NEO_GRB 
  * \param   logger    Logging class.
  */
 Leds::Leds(ILogging& logger) :
-  mLogger(logger),
-  mInitialized(false)
+    mLogger(logger),
+    mInitialized(false)
 { ; }
 
 /**

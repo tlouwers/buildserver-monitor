@@ -21,7 +21,12 @@
 /* Includes                                                             */
 /************************************************************************/
 #include "config.h"
-#include "Leds.hpp"
+#if (LEDS == REAL)
+    #include "Leds.hpp"
+#else
+    #include "FakeLeds.hpp"
+#endif
+#include "FakeLeds.hpp"
 #include "Logging.hpp"
 #include "StateMachine.hpp"
 #include "WifiConnection.hpp"
@@ -43,7 +48,11 @@ public:
     void Process();
 
 private:
+#if (LEDS == REAL)
     Leds            mLeds;
+#else
+    FakeLeds        mLeds;
+#endif
     Logging         mLogger;
     StateMachine    mSM;
     WifiConnection  mWifi;

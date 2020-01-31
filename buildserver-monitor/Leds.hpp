@@ -25,28 +25,8 @@
 /************************************************************************/
 #include <cstdint>
 #include <string>
+#include "ILeds.hpp"
 #include "ILogging.hpp"
-
-
-/************************************************************************/
-/* Enums                                                                */
-/************************************************************************/
-/**
- * \enum    LedColor
- * \brief   Available led colors.
- */
-enum class LedColor : uint8_t
-{
-    Purple,
-    Red,
-    Orange,
-    Yellow,
-    Green,
-    LightBlue,
-    Blue,
-    White,
-    Off
-};
 
 
 /************************************************************************/
@@ -55,16 +35,16 @@ enum class LedColor : uint8_t
 /**
  * \brief   Leds class.
  */
-class Leds
+class Leds final : public ILeds
 {
 public:
     explicit Leds(ILogging& logger);
     virtual ~Leds();
 
-    bool Init();
+    bool Init() override;
 
-    void SetColor(LedColor color);
-    void SetColor(uint8_t led_number, LedColor color);
+    void SetColor(LedColor color) override;
+    void SetColor(uint8_t led_number, LedColor color) override;
 
 private:
     ILogging& mLogger;
