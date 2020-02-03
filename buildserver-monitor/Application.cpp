@@ -33,7 +33,7 @@ Application::Application() :
     mSM(mLogger),
     mWifi(mLogger),
     mHttp(mLogger),
-    mState(BuildState::NoState)
+    mBuildState(BuildState::NoState)
 { 
   ; 
 }
@@ -235,8 +235,7 @@ bool Application::TryAcquiring()
     delay(1000);
 
     bool result = mHttp.Acquire();
-    Serial.println("hello there");
-    
+        
     mLeds.SetColor(LedColor::Off);
 
     return result;
@@ -256,8 +255,7 @@ bool Application::TryParsing()
     bool result = mHttp.Parse();
     if (!result) { return false; }
 
-    mState = mHttp.getBuildState();
-    Serial.println(int(mState));
+    mBuildState = mHttp.getBuildState();
     
     mLeds.SetColor(LedColor::Off);
 
@@ -272,7 +270,7 @@ bool Application::TryDisplaying()
 {
     mLogger.Log(LogLevel::INFO, "Trying to display...");
 
-    switch (mState)
+    switch (mBuildState)
     {
         case BuildState::Success:   mLeds.SetColor(LedColor::Green); break;
         case BuildState::Unstable:  mLeds.SetColor(LedColor::Yellow); break;
@@ -286,7 +284,7 @@ bool Application::TryDisplaying()
     delay(1000);
     mLeds.SetColor(LedColor::Off);
 
-    mState = BuildState::NoState;
+    mBuildState = BuildState::NoState;
 
     return true;
 }

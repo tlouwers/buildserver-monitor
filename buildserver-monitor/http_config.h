@@ -30,11 +30,13 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
+static const uint8_t FINGERPRINT_SIZE = 20;
+
 // Network
-static std::string    USERNAME = "your username";     // The jenkins username.
-static std::string    BASIC_AUTHENTICATION_TOKEN = "your token";   // The basic authentication token needed for https requests.
-static std::string    JENKINS_API_URL = "your api link";   // The jenkins api url needed to request the json data from.
-static const uint8_t  SHA1_FINGERPRINT[20] = {}; // Fingerprint for jenkins URL, expires on DATE, needs to be updated well before this date
+static std::string    USERNAME = "<YOUR_USRERNAME_HERE>";     // The jenkins username.
+static std::string    BASIC_AUTHENTICATION_TOKEN = "<YOUR_AUTHENTICATION_TOKEN_HERE>";   // The basic authentication token needed for https requests.
+static std::string    JENKINS_API_URL = "<YOUR_JENKINS_API_URL_HERE>";   // The jenkins api url needed to request the json data from.
+static const uint8_t  SHA1_FINGERPRINT[FINGERPRINT_SIZE] = {}; // Fingerprint for jenkins URL, expires on DATE, needs to be updated well before this date
 
 #ifdef __cplusplus
 }

@@ -10,9 +10,8 @@
 
    \brief   Wrapper for a http client.
 
-   \details Intended use is to hold the environment specific parts of the Http
-            configuration, things that need to be altered for a given buildserver
-            environment.
+   \details Intended use is to provide an easier means to handle a http requests
+            and retrieve data for a specified buildserver URL.
 
    \date    01-2020
 */
@@ -74,6 +73,8 @@ class httpClient
     bool mInit;
     String mJsonString;
     char* mResult;
+
+    bool CheckValidHttpConfiguration(std::string username, std::string authentication_token, std::string jenkins_api_url, const uint8_t* fingerprint);
 };
 
 

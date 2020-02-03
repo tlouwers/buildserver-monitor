@@ -8,7 +8,7 @@
             a beer in return.
                                                                   melip muskman
 
-   \brief   Http configuration file for the Buildserver Monitor.
+   \brief   Wrapper for a http client.
 
    \details Intended use is to provide an easier means to handle a http requests
             and retrieve data for a specified buildserver URL.
@@ -50,7 +50,7 @@ httpClient::httpClient(ILogging& logger) :
 */
 httpClient::~httpClient()
 {
-
+  delete client;
 }
 
 bool httpClient::Init()
@@ -58,6 +58,10 @@ bool httpClient::Init()
   if (!mInit) {
     mLogger.Log(LogLevel::INFO, "Initializing http client");
     client = new BearSSL::WiFiClientSecure();
+    if (client == NULL) {
+      mLogger.Log(LogLevel::ERROR, "cannot allocate memory for https client");
+      return false;
+    }
     client->setFingerprint(SHA1_FINGERPRINT);
     mInit = true;
   }
@@ -74,9 +78,14 @@ bool httpClient::Acquire()
     mLogger.Log(LogLevel::ERROR, "No http client configured!");
     return false;
   }
-  
+
+  if (!CheckValidHttpConfiguration(USERNAME, BASIC_AUTHENTICATION_TOKEN, JENKINS_API_URL, SHA1_FINGERPRINT))    // Note: these values are taken from the 'http_config.h' file.
+  {
+    return false;
+  }
+
   std::string url = "https://" + USERNAME + ":" + BASIC_AUTHENTICATION_TOKEN + "@" + JENKINS_API_URL;
-  if (https.begin(*client, url.c_str())) 
+  if (https.begin(*client, url.c_str()))
   {
 
     // start connection and send HTTP header
@@ -117,7 +126,9 @@ bool httpClient::Acquire()
 
 bool httpClient::Parse()
 {
-  if(mJsonString == "") { return false; }
+  if (mJsonString == "") {
+    return false;
+  }
 
   StaticJsonDocument<200> doc;
   DeserializationError error = deserializeJson(doc, mJsonString);
@@ -137,10 +148,77 @@ bool httpClient::Parse()
 
 BuildState httpClient::getBuildState()
 {
-  if(strcmp(mResult,"SUCCESS") == 0) { return BuildState::Success; }
-  else if(strcmp(mResult,"UNSTABLE") == 0) { return BuildState::Unstable; }
-  else if(strcmp(mResult,"FAILURE") == 0) { return BuildState::Failure; }
-  else if(strcmp(mResult,"ABORTED") == 0) { return BuildState::Aborted; }
-  else if(strcmp(mResult,"NOT_BUILT") == 0) { return BuildState::NotBuild;  }
-  else { return BuildState::NoState; }
+  if (strcmp(mResult, "SUCCESS") == 0) {
+    return BuildState::Success;
+  }
+  else if (strcmp(mResult, "UNSTABLE") == 0) {
+    return BuildState::Unstable;
+  }
+  else if (strcmp(mResult, "FAILURE") == 0) {
+    return BuildState::Failure;
+  }
+  else if (strcmp(mResult, "ABORTED") == 0) {
+    return BuildState::Aborted;
+  }
+  else if (strcmp(mResult, "NOT_BUILT") == 0) {
+    return BuildState::NotBuild;
+  }
+  else {
+    return BuildState::NoState;
+  }
+}
+
+/************************************************************************/
+/* Private Methods                                                      */
+/************************************************************************/
+/**
+   \brief   Basic check to prevent the default or empty USERNAME, BASIC_AUTHENTICATION_TOKEN and JENKINS_API_URL.
+   \param   ssid      The WiFi SSID to check.
+   \param   password  The WiFi password to check.
+   \returns True if ssid and password are filled and not default.
+*/
+bool httpClient::CheckValidHttpConfiguration(std::string username, std::string authentication_token, std::string jenkins_api_url, const uint8_t* fingerprint)
+{
+  if ( (username.compare("<YOUR_USRERNAME_HERE>") == 0) ||
+       (username.compare("") == 0) )
+  {
+    mLogger.Log(LogLevel::WARNING, "Username not configured.");
+    return false;
+  }
+
+  if ( (authentication_token.compare("<YOUR_AUTHENTICATION_TOKEN_HERE>") == 0) ||
+       (authentication_token.compare("") == 0) )
+  {
+    mLogger.Log(LogLevel::WARNING, "Authentication token not configured.");
+    return false;
+  }
+
+  if ( (jenkins_api_url.compare("<YOUR_JENKINS_API_URL_HERE>") == 0) ||
+       (jenkins_api_url.compare("") == 0) )
+  {
+    mLogger.Log(LogLevel::WARNING, "Jenkins api url not configured.");
+    return false;
+  }
+
+  bool result = false;
+  if(FINGERPRINT_SIZE < 1) 
+  {
+    mLogger.Log(LogLevel::WARNING, "fingerprint size is 0.");
+    return false;
+  }
+  for(int i = 0; i < FINGERPRINT_SIZE; i ++) 
+  {
+      if(fingerprint[i] != 0xFF)
+      {
+        result = true;
+        break;
+      }
+  }
+  if(!result)
+  {
+    mLogger.Log(LogLevel::WARNING, "fingerprint not configured.");
+    return false;
+  }
+  
+  return true;
 }

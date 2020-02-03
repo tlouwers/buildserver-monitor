@@ -65,7 +65,7 @@ private:
     bool TryParsing();
     bool TryDisplaying();
 
-    BuildState mState;
+    BuildState mBuildState;
 };
 
 
