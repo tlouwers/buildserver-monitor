@@ -29,6 +29,7 @@
 #include "Logging.hpp"
 #include "StateMachine.hpp"
 #include "WifiConnection.hpp"
+#include "httpClient.hpp"
 
 
 /************************************************************************/
@@ -55,6 +56,7 @@ private:
     Logging         mLogger;
     StateMachine    mSM;
     WifiConnection  mWifi;
+    httpClient      mHttp;
 
     // State handlers
     void HandleStartUp();
@@ -70,6 +72,8 @@ private:
     bool TryAcquiring();
     bool TryParsing();
     bool TryDisplaying();
+
+    BuildState mBuildState;
 };
 
 
