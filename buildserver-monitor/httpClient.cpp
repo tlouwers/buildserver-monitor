@@ -27,11 +27,6 @@
 
 
 /************************************************************************/
-/* Constants                                                            */
-/************************************************************************/
-
-
-/************************************************************************/
 /* Public Methods                                                       */
 /************************************************************************/
 /**
@@ -39,31 +34,44 @@
    \param   logger      Logging class.
 */
 httpClient::httpClient(ILogging& logger) :
-  mLogger(logger)
+  mLogger(logger),
+  client(NULL),
+  mInit(false),
+  mJsonString(""),
+  mResult(NULL)
+{ ; }
+
+/**
+ * \brief   Destructor, deletes the client (if needed).
+ */
+httpClient::~httpClient()
 {
-  mInit = false;
-  mJsonString = "";
+  if (client != NULL) {
+    delete client;
+    client = NULL;
+  }
 }
 
 /**
-   \brief   Destructor, disconnects (if connected).
-*/
-httpClient::~httpClient()
-{
-  delete client;
-}
-
+ * \brief   Initialize the HTTPS connection.
+ * \returns True if succesful, else false.
+ */
 bool httpClient::Init()
 {
   if (!mInit) {
     mLogger.Log(LogLevel::INFO, "Initializing http client");
-    client = new BearSSL::WiFiClientSecure();
+    client = new BearSSL::WiFiClientSecure();    
     if (client == NULL) {
-      mLogger.Log(LogLevel::ERROR, "cannot allocate memory for https client");
+      mLogger.Log(LogLevel::ERROR, "Cannot allocate memory for https client");
       return false;
     }
-    client->setFingerprint(SHA1_FINGERPRINT);
-    mInit = true;
+    
+    if (client->setFingerprint(SHA1_FINGERPRINT)) {
+      mInit = true;
+    } else {
+      mLogger.Log(LogLevel::ERROR, "Cannot set SHA1 fingerprint for https client");
+      return false;
+    }
   }
   else
   {
@@ -72,6 +80,10 @@ bool httpClient::Init()
   return mInit;
 }
 
+/**
+ * \brief     Acquire build JSON file from given Jenkins URL.
+ * \returns   True if JOSN result cuold be acquired, else false.
+ */
 bool httpClient::Acquire()
 {
   if (client == NULL) {
@@ -79,15 +91,13 @@ bool httpClient::Acquire()
     return false;
   }
 
-  if (!CheckValidHttpConfiguration(USERNAME, BASIC_AUTHENTICATION_TOKEN, JENKINS_API_URL, SHA1_FINGERPRINT))    // Note: these values are taken from the 'http_config.h' file.
-  {
+  if (!CheckValidHttpConfiguration(USERNAME, BASIC_AUTHENTICATION_TOKEN, JENKINS_API_URL, SHA1_FINGERPRINT)) {  // Note: these values are taken from the 'http_config.h' file.
     return false;
   }
 
   std::string url = "https://" + USERNAME + ":" + BASIC_AUTHENTICATION_TOKEN + "@" + JENKINS_API_URL;
   if (https.begin(*client, url.c_str()))
   {
-
     // start connection and send HTTP header
     int httpCode = https.GET();
     if (httpCode > 0)
@@ -107,7 +117,7 @@ bool httpClient::Acquire()
     }
     else
     {
-      std::string message = "[HTTPS] GET... failed, error: " + std::string(https.errorToString(httpCode).c_str());
+      String message = "[HTTPS] GET... failed, error: " + https.errorToString(httpCode);
       mLogger.Log(LogLevel::ERROR, message.c_str());
       return false;
     }
@@ -119,11 +129,15 @@ bool httpClient::Acquire()
     mLogger.Log(LogLevel::ERROR, message.c_str());
     return false;
   }
-
-  Serial.println(mJsonString);
+  
+  mLogger.Log(LogLevel::ALL, mJsonString.c_str());
   return true;
 }
 
+/**
+ * \brief   Parse the received Jenkins JSON file (seek the "result" - the build status of the job).
+ * \returns True if the build state could be found, else false.
+ */
 bool httpClient::Parse()
 {
   if (mJsonString == "") {
@@ -134,18 +148,26 @@ bool httpClient::Parse()
   DeserializationError error = deserializeJson(doc, mJsonString);
 
   if (error) {
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.c_str());
+    String errorStr(error.c_str());
+    String message = "DeserializeJson() failed: " + errorStr;
+    mLogger.Log(LogLevel::ALL, message.c_str());
     return false;
   }
 
   const char* result = doc["result"];
-  mResult = (char*)result;
-  Serial.println(mResult);
+  mResult = const_cast<char*>(result);
+
+  String resultStr(result);
+  String message = "Parsed JSON result: " + resultStr;
+  mLogger.Log(LogLevel::ALL, message.c_str());
   mJsonString = "";
   return true;
 }
 
+/**
+ * \brief   Get the buildstate from the retrieved JSON result.
+ * \returns The current build state.
+ */
 BuildState httpClient::getBuildState()
 {
   if (strcmp(mResult, "SUCCESS") == 0) {
@@ -168,15 +190,18 @@ BuildState httpClient::getBuildState()
   }
 }
 
+
 /************************************************************************/
 /* Private Methods                                                      */
 /************************************************************************/
 /**
-   \brief   Basic check to prevent the default or empty USERNAME, BASIC_AUTHENTICATION_TOKEN and JENKINS_API_URL.
-   \param   ssid      The WiFi SSID to check.
-   \param   password  The WiFi password to check.
-   \returns True if ssid and password are filled and not default.
-*/
+ * \brief   Basic check to prevent the default or empty USERNAME, BASIC_AUTHENTICATION_TOKEN and JENKINS_API_URL.
+ * \param   username              The Jenkins username to check.
+ * \param   authentication_token  The authentication token to check.
+ * \param   jenkins_api_url       The Jenkins URL to check.
+ * \param   fingerprint           The fingerprint array to check.
+ * \returns True if ssid and password are filled and not default.
+ */
 bool httpClient::CheckValidHttpConfiguration(std::string username, std::string authentication_token, std::string jenkins_api_url, const uint8_t* fingerprint)
 {
   if ( (username.compare("<YOUR_USRERNAME_HERE>") == 0) ||
@@ -201,22 +226,25 @@ bool httpClient::CheckValidHttpConfiguration(std::string username, std::string a
   }
 
   bool result = false;
-  if(FINGERPRINT_SIZE < 1) 
+  if (FINGERPRINT_SIZE < 1) 
   {
-    mLogger.Log(LogLevel::WARNING, "fingerprint size is 0.");
+    mLogger.Log(LogLevel::WARNING, "Fingerprint size is 0.");
     return false;
   }
-  for(int i = 0; i < FINGERPRINT_SIZE; i ++) 
+  if (fingerprint != 0)
   {
-      if(fingerprint[i] != 0xFF)
+    for (auto i = 0; i < FINGERPRINT_SIZE; i ++) 
+    {
+      if (fingerprint[i] != 0xFF)
       {
         result = true;
         break;
       }
-  }
-  if(!result)
+    }
+  }  
+  if (!result)
   {
-    mLogger.Log(LogLevel::WARNING, "fingerprint not configured.");
+    mLogger.Log(LogLevel::WARNING, "Fingerprint not configured.");
     return false;
   }
   

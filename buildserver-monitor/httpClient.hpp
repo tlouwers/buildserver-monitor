@@ -30,12 +30,13 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiClientSecureBearSSL.h>
 
+
 /************************************************************************/
 /* Enums                                                                */
 /************************************************************************/
 /**
- * \enum    BuildStatus
- * \brief   Available led colors.
+ * \enum    BuildState
+ * \brief   Available build states.
  */
 enum class BuildState : uint8_t
 {
@@ -51,7 +52,7 @@ enum class BuildState : uint8_t
 /* Class declaration                                                    */
 /************************************************************************/
 /**
-   \brief   Wrapper for a WiFi connection.
+   \brief   Wrapper for a Http connection.
 */
 class httpClient
 {
