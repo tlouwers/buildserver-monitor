@@ -34,9 +34,7 @@ Application::Application() :
     mWifi(mLogger),
     mHttp(mLogger),
     mBuildState(BuildState::NoState)
-{ 
-  ; 
-}
+{ ; }
 
 /**
  * \brief   Initialize the various peripherals, configures components and show

@@ -28,7 +28,11 @@
 #endif
 #include "Logging.hpp"
 #include "StateMachine.hpp"
-#include "WifiConnection.hpp"
+#if (WIFI == REAL)
+    #include "WifiConnection.hpp"
+#else
+    #include "FakeWifiConnection.hpp"
+#endif
 #include "httpClient.hpp"
 
 
@@ -49,14 +53,18 @@ public:
 
 private:
 #if (LEDS == REAL)
-    Leds            mLeds;
+    Leds               mLeds;
 #else
-    FakeLeds        mLeds;
+    FakeLeds           mLeds;
 #endif
-    Logging         mLogger;
-    StateMachine    mSM;
-    WifiConnection  mWifi;
-    httpClient      mHttp;
+    Logging            mLogger;
+    StateMachine       mSM;
+#if (WIFI == REAL)
+    WifiConnection     mWifi;
+#else
+    FakeWifiConnection mWifi;
+#endif
+    httpClient         mHttp;
 
     // State handlers
     void HandleStartUp();

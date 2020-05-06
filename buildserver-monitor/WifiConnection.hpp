@@ -25,6 +25,7 @@
 /************************************************************************/
 #include <cstdint>
 #include "ILogging.hpp"
+#include "IWifiConnection.hpp"
 
 
 /************************************************************************/
@@ -33,15 +34,15 @@
 /**
  * \brief   Wrapper for a WiFi connection.
  */
-class WifiConnection
+class WifiConnection final : public IWifiConnection
 {
 public:
     explicit WifiConnection(ILogging& logger);
     virtual ~WifiConnection();
 
-    bool Connect(uint32_t timeout_ms);
-    bool IsConnected() const;
-    bool Disconnect();
+    bool Connect(uint32_t timeout_ms) override;
+    bool IsConnected() const override;
+    bool Disconnect() override;
     
 private:
     ILogging& mLogger;
