@@ -33,7 +33,11 @@
 #else
     #include "FakeWifiConnection.hpp"
 #endif
-#include "httpClient.hpp"
+#if (HTTP == REAL)
+    #include "httpClient.hpp"
+#else
+    #include "FakeHttpClient.hpp"
+#endif
 
 
 /************************************************************************/
@@ -64,7 +68,11 @@ private:
 #else
     FakeWifiConnection mWifi;
 #endif
+#if (HTTP == REAL) 
     httpClient         mHttp;
+#else
+    FakeHttpClient     mHttp;
+#endif
 
     // State handlers
     void HandleStartUp();

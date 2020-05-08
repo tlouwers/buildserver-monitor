@@ -24,14 +24,13 @@
 /* Includes                                                             */
 /************************************************************************/
 #include <cstdint>
-#include "config.h"
 
 
 /************************************************************************/
 /* Interface declaration                                                */
 /************************************************************************/
 /**
- * \brief   IWifiConnection interface class.
+ * \class   IWifiConnection interface class.
  */
 class IWifiConnection
 {

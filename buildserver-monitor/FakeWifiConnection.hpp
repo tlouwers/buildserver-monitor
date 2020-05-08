@@ -10,7 +10,7 @@
  *
  * \brief   Fake implementation of the wrapper for a WiFi connection.
  *
- * \details Intended use is to provide a a simulation for when no WiFi
+ * \details Intended use is to provide a simulation for when no WiFi
  *          connection is to be used.
  *
  * \author  T. Louwers <terry.louwers@fourtress.nl>
@@ -32,7 +32,7 @@
 /* Class declaration                                                    */
 /************************************************************************/
 /**
- * \brief   FakeWifiConnection class.
+ * \class   FakeWifiConnection class.
  */
 class FakeWifiConnection final : public IWifiConnection
 {
@@ -41,11 +41,11 @@ public:
      * \brief   Constructor.
      * \param   logger    Logging class.
      */
-    explicit FakeWifiConnection(const ILogging& logger) { (void)(logger); };
+    explicit FakeWifiConnection(const ILogging& logger) { (void)(logger); }
 	/**
      * \brief   Destructor.
      */
-    virtual ~FakeWifiConnection() {};
+    virtual ~FakeWifiConnection() {}
 
     /**
      * \brief   Connect to WiFi network.
@@ -53,24 +53,24 @@ public:
      */
     bool Connect(uint32_t timeout_ms) override
     {
-		    (void)(timeout_ms);
-		    mConnected = true;
-		    return true;
-	  }
-	  /**
-	   * \brief   Check if connected via WiFi.
+        (void)(timeout_ms);
+        mConnected = true;
+        return true;
+    }
+    /**
+     * \brief   Check if connected via WiFi.
      * \returns True if connected, else false. Note: simulated state.
-	   */
+     */
     bool IsConnected() const override { return mConnected; }
-	  /**
+    /**
      * \brief   Disconnect from WiFi network.
      * \returns Always succeeds since there is no hardware.
      */
     bool Disconnect() override
-	  {
-		    mConnected = false;
-		    return true;
-	  }
+    {
+        mConnected = false;
+        return true;
+    }
     
 private:
     bool mConnected = false;
