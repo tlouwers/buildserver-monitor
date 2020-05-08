@@ -270,13 +270,14 @@ bool Application::TryDisplaying()
 
     switch (mBuildState)
     {
-        case BuildState::Success:   mLeds.SetColor(LedColor::Green); break;
+        case BuildState::Success:   mLeds.SetColor(LedColor::Green);  break;
         case BuildState::Unstable:  mLeds.SetColor(LedColor::Yellow); break;
-        case BuildState::Failure:   mLeds.SetColor(LedColor::Red); break;
-        case BuildState::Aborted:   mLeds.SetColor(LedColor::Blue); break;
+        case BuildState::Failure:   mLeds.SetColor(LedColor::Red);    break;
+        case BuildState::Aborted:   mLeds.SetColor(LedColor::Blue);   break;
         case BuildState::NotBuild:  mLeds.SetColor(LedColor::Purple); break;
-        case BuildState::NoState:   mLeds.SetColor(LedColor::White); break;
-        default:   
+        case BuildState::NoState:   mLeds.SetColor(LedColor::White);  break;
+        default:
+            mLogger.Log(LogLevel::ERROR, "Invalid BuildState!"); 
             break;
     }
     delay(1000);
