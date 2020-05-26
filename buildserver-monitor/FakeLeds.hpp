@@ -42,29 +42,81 @@ public:
      * \brief   Constructor.
      * \param   logger    Logging class.
      */
-    explicit FakeLeds(const ILogging& logger) { (void)(logger); };
+    explicit FakeLeds(ILogging& logger) : mLogger(logger), mInitialized(false) {}
     /**
      * \brief   Destructor.
      */
-    virtual ~FakeLeds() {};
+    virtual ~FakeLeds() {}
 
     /**
      * \brief   Initialized the fake leds.
      * \returns Always true since there is no hardware.
      */
-    bool Init() override { return true; }
+    bool Init() override { mInitialized = true; return true; }
 
     /**
      * \brief   Set all leds to the given color.
      * \param   color   The color to set.
      */
-    void SetColor(LedColor color) override { (void)(color); };
+    void SetColor(LedColor color) override
+    {
+        if (mInitialized)
+        {
+            std::string message = "Set all leds to color [" + mLedColorTypes[static_cast<uint8_t>(color)] + "]";
+            mLogger.Log(LogLevel::INFO, message.c_str());
+        }
+        else
+        {
+            mLogger.Log(LogLevel::WARNING, "Leds not initialized");
+        }
+    };
     /**
      * \brief   Set the given led to the given color.
      * \param   led_number  The number of the led in the strain to set.
      * \param   color       The color to set.
      */
-    void SetColor(uint8_t led_number, LedColor color) override { (void)(led_number); (void)(color); };
+    void SetColor(uint8_t led_number, LedColor color) override
+    {
+        if (mInitialized)
+        {
+            if (led_number > 0)
+            {
+                // ToDo: fix NumberToString as this yield square blocks in serial output
+                char numberStr[32] = {};
+                snprintf(numberStr, 32, "%d", led_number);
+
+                std::string message = "Set led [";
+                message.append(numberStr).append("] to color [").append(mLedColorTypes[static_cast<uint8_t>(color)]).append("]");
+                mLogger.Log(LogLevel::INFO, message.c_str());
+            }
+            else
+            {
+                mLogger.Log(LogLevel::ERROR, "Invalid led number!");
+            }
+        }
+        else
+        {
+            mLogger.Log(LogLevel::WARNING, "Leds not initialized");
+        }
+    }
+
+private:
+    ILogging& mLogger;
+    bool      mInitialized;
+
+    // To print LedColor to serial output
+    std::string mLedColorTypes[9] =
+    {
+        "Purple",
+        "Red",
+        "Orange",
+        "Yellow",
+        "Green",
+        "LightBlue",
+        "Blue",
+        "White",
+        "Off"
+    };
 };
 
 

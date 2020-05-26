@@ -1,19 +1,19 @@
 /**
-   \file httpClient.cpp
-
-   \licence "THE BEER-WARE LICENSE" (Revision 42):
-            <jilvin.wiegmus@fourtress.nl> wrote this file. As long as you retain
-            this notice you can do whatever you want with this stuff. If we
-            meet some day, and you think this stuff is worth it, you can buy me
-            a beer in return.
-                                                                  melip muskman
-
-   \brief   Wrapper for a http client.
-
-   \details Intended use is to provide an easier means to handle a http requests
-            and retrieve data for a specified buildserver URL.
-
-   \date    01-2020
+ * \file httpClient.cpp
+ * 
+ * \licence "THE BEER-WARE LICENSE" (Revision 42):
+ *          <jilvin.wiegmus@fourtress.nl> wrote this file. As long as you retain
+ *          this notice you can do whatever you want with this stuff. If we
+ *          meet some day, and you think this stuff is worth it, you can buy me
+ *          a beer in return.
+ *                                                                melip muskman
+ * 
+ * \brief   Wrapper for a http client.
+ * 
+ * \details Intended use is to provide an easier means to handle a http requests
+ *          and retrieve data for a specified buildserver URL.
+ * 
+ * \date    01-2020
 */
 
 /************************************************************************/
@@ -30,9 +30,9 @@
 /* Public Methods                                                       */
 /************************************************************************/
 /**
-   \brief   Constructor.
-   \param   logger      Logging class.
-*/
+ * \brief   Constructor.
+ * \param   logger      Logging class.
+ */
 httpClient::httpClient(ILogging& logger) :
   mLogger(logger),
   client(NULL),
@@ -82,7 +82,7 @@ bool httpClient::Init()
 
 /**
  * \brief     Acquire build JSON file from given Jenkins URL.
- * \returns   True if JOSN result cuold be acquired, else false.
+ * \returns   True if JOSN result could be acquired, else false.
  */
 bool httpClient::Acquire()
 {
@@ -202,7 +202,7 @@ BuildState httpClient::getBuildState()
  * \param   fingerprint           The fingerprint array to check.
  * \returns True if ssid and password are filled and not default.
  */
-bool httpClient::CheckValidHttpConfiguration(std::string username, std::string authentication_token, std::string jenkins_api_url, const uint8_t* fingerprint)
+bool httpClient::CheckValidHttpConfiguration(const std::string& username, const std::string& authentication_token, const std::string& jenkins_api_url, const uint8_t* fingerprint)
 {
   if ( (username.compare("<YOUR_USRERNAME_HERE>") == 0) ||
        (username.compare("") == 0) )
@@ -231,9 +231,9 @@ bool httpClient::CheckValidHttpConfiguration(std::string username, std::string a
     mLogger.Log(LogLevel::WARNING, "Fingerprint size is 0.");
     return false;
   }
-  if (fingerprint != 0)
+  if (fingerprint != NULL)
   {
-    for (auto i = 0; i < FINGERPRINT_SIZE; i ++) 
+    for (auto i = 0; i < FINGERPRINT_SIZE; i++) 
     {
       if (fingerprint[i] != 0xFF)
       {

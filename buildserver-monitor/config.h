@@ -57,6 +57,8 @@ static const char versionString[] = "Buildserver Monitor v0.1";
 
 // Simulation
 #define LEDS  REAL
+#define WIFI  REAL
+#define HTTP  REAL
 
 
 #ifdef __cplusplus
