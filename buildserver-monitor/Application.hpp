@@ -21,6 +21,7 @@
 /* Includes                                                             */
 /************************************************************************/
 #include "config.h"
+#include "timings.hpp"
 #if (LEDS == REAL)
     #include "Leds.hpp"
 #else

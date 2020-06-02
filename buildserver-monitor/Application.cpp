@@ -23,6 +23,13 @@
 
 
 /************************************************************************/
+/* Reset function declaration                                           */
+/************************************************************************/
+// https://www.instructables.com/id/two-ways-to-reset-arduino-in-software/
+void(* resetFunc) (void) = 0;
+
+
+/************************************************************************/
 /* Public Methods                                                       */
 /************************************************************************/
 /**
@@ -50,7 +57,7 @@ bool Application::Init()
     if(!mLeds.Init()) { result = false; }
     if(!mHttp.Init()) { result = false; }
 
-    delay(1000);
+    delay(ONE_SECOND);
 
     return result;
 }
@@ -73,6 +80,8 @@ void Application::Process()
 
         default:
             mLogger.Log(LogLevel::ERROR, "Invalid state!");
+            delay(ONE_SECOND);
+            resetFunc();          // Resets the ESP-01
             break;
     }
 }
@@ -89,7 +98,7 @@ void Application::HandleStartUp()
     mLogger.Log(LogLevel::INFO, "Handling StartUp");
 
     mLeds.SetColor(1, LedColor::Green);
-    delay(1000);
+    delay(ONE_SECOND);
     mLeds.SetColor(LedColor::Off);
 
     mSM.SetState(State::Idle);
@@ -176,7 +185,7 @@ void Application::HandleSleeping()
     mLogger.Log(LogLevel::INFO, "Handling Sleeping");
 
     mLeds.SetColor(1, LedColor::Yellow);
-    delay(5000);
+    delay(FIVE_SECONDS);
     mLeds.SetColor(LedColor::Off);
 
     mSM.SetState(State::Idle);
@@ -190,11 +199,15 @@ void Application::HandleError()
     mLogger.Log(LogLevel::INFO, "Handling Error");
 
     mLeds.SetColor(LedColor::Red);
-    delay(1000);
+    if (mWifi.IsConnected())
+    {
+        mWifi.Disconnect();
+    }
+    delay(ONE_SECOND);
     mLeds.SetColor(LedColor::Off);
 
     // Discuss: move to Sleeping state first? This would turn off WiFi/Leds/...
-    delay(4000);
+    delay(FOUR_SECONDS);
 
     mSM.SetState(State::Idle);
 }
@@ -230,7 +243,7 @@ bool Application::TryAcquiring()
     mLogger.Log(LogLevel::INFO, "Trying to acquire...");
 
     mLeds.SetColor(3, LedColor::Blue);
-    delay(1000);
+    delay(ONE_SECOND);
 
     bool result = mHttp.Acquire();
         
@@ -248,7 +261,7 @@ bool Application::TryParsing()
     mLogger.Log(LogLevel::INFO, "Trying to parse...");
 
     mLeds.SetColor(4, LedColor::Red);
-    delay(1000);
+    delay(ONE_SECOND);
 
     bool result = mHttp.Parse();
     if (!result) { return false; }
@@ -280,7 +293,7 @@ bool Application::TryDisplaying()
             mLogger.Log(LogLevel::ERROR, "Invalid BuildState!"); 
             break;
     }
-    delay(1000);
+    delay(ONE_SECOND);
     mLeds.SetColor(LedColor::Off);
 
     mBuildState = BuildState::NoState;
