@@ -184,9 +184,10 @@ void Application::HandleSleeping()
 {
     mLogger.Log(LogLevel::INFO, "Handling Sleeping");
 
-    mLeds.SetColor(1, LedColor::Yellow);
-    delay(FIVE_SECONDS);
-    mLeds.SetColor(LedColor::Off);
+//    mLeds.SetColor(1, LedColor::Yellow);
+//    delay(FIVE_SECONDS);
+    delay(ONE_MINUTE);
+//    mLeds.SetColor(LedColor::Off);
 
     mSM.SetState(State::Idle);
 }
@@ -220,7 +221,7 @@ bool Application::TryConnect()
 {
     mLogger.Log(LogLevel::INFO, "Trying to connect...");
 
-    mLeds.SetColor(2, LedColor::Purple);
+//    mLeds.SetColor(2, LedColor::Purple);
 
     bool isConnected = mWifi.IsConnected();
     
@@ -229,7 +230,7 @@ bool Application::TryConnect()
         isConnected = mWifi.Connect(WIFI_CONNECTION_TIMEOUT);   // Can take some time (seconds)!
     }
 
-    mLeds.SetColor(LedColor::Off);
+//    mLeds.SetColor(LedColor::Off);
     
     return isConnected;
 }
@@ -242,12 +243,12 @@ bool Application::TryAcquiring()
 {
     mLogger.Log(LogLevel::INFO, "Trying to acquire...");
 
-    mLeds.SetColor(3, LedColor::Blue);
-    delay(ONE_SECOND);
+//    mLeds.SetColor(3, LedColor::Blue);
+//    delay(ONE_SECOND);
 
     bool result = mHttp.Acquire();
         
-    mLeds.SetColor(LedColor::Off);
+//    mLeds.SetColor(LedColor::Off);
 
     return result;
 }
@@ -260,15 +261,15 @@ bool Application::TryParsing()
 {
     mLogger.Log(LogLevel::INFO, "Trying to parse...");
 
-    mLeds.SetColor(4, LedColor::Red);
-    delay(ONE_SECOND);
+//    mLeds.SetColor(4, LedColor::Red);
+//    delay(ONE_SECOND);
 
     bool result = mHttp.Parse();
     if (!result) { return false; }
 
     mBuildState = mHttp.getBuildState();
     
-    mLeds.SetColor(LedColor::Off);
+//    mLeds.SetColor(LedColor::Off);
 
     return result;
 }
@@ -293,8 +294,8 @@ bool Application::TryDisplaying()
             mLogger.Log(LogLevel::ERROR, "Invalid BuildState!"); 
             break;
     }
-    delay(ONE_SECOND);
-    mLeds.SetColor(LedColor::Off);
+//    delay(ONE_SECOND);
+//    mLeds.SetColor(LedColor::Off);
 
     mBuildState = BuildState::NoState;
 

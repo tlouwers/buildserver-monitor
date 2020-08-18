@@ -173,6 +173,7 @@ bool WifiConnection::CheckValidSSIDAndPassword(const char* ssid, const char* pas
 bool WifiConnection::ConnectionAttempt(uint32_t timeout_ms)
 {
     WiFi.mode(WIFI_STA);
+    wifi_set_sleep_type(LIGHT_SLEEP_T);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
     if (!WiFi.isConnected())
