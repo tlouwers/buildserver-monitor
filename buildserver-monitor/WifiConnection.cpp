@@ -139,10 +139,12 @@ bool WifiConnection::CheckValidSSIDAndPassword(const char* ssid, const char* pas
     if (ssid == NULL)
     {
         mLogger.Log(LogLevel::ERROR, "Empty pointer for ssid");
+        return false;
     }
     if (password == NULL)
     {
         mLogger.Log(LogLevel::ERROR, "Empty pointer for password");
+        return false;
     }
   
     std::string configured_ssid(ssid);

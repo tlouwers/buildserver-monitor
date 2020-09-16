@@ -1,5 +1,10 @@
 # Information
-This folder contains various manuals on how to install the development environment, solder the hardware components, construct the buildserver monitor kit in general and program the firmware.
+This folder contains the manual with instructions how to:
+* install the development environment
+* solder the hardware components
+* construct the buildserver monitor kit in general
+* program the firmware
+* list of components used
 
 ##
-Documentation is written in LibreOffice v6.4, intended as word documents.
+Documentation is written in LibreOffice v6.4, intended as large word document.
