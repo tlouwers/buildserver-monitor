@@ -26,7 +26,9 @@
 /* Reset function declaration                                           */
 /************************************************************************/
 // https://www.instructables.com/id/two-ways-to-reset-arduino-in-software/
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 void(* resetFunc) (void) = 0;
+#endif
 
 
 /************************************************************************/
@@ -51,7 +53,7 @@ Application::Application() :
 bool Application::Init()
 {
     bool result = true;
-  
+
     mLogger.Log(LogLevel::INFO, versionString);
 
     if(!mLeds.Init()) { result = false; }
@@ -168,7 +170,7 @@ void Application::HandleDisplaying()
         {
             mWifi.Disconnect();
         }
-      
+
         mSM.SetState(State::Sleeping);
     }
     else
@@ -223,14 +225,14 @@ bool Application::TryConnect()
     mLeds.SetColor(2, LedColor::Purple);
 
     bool isConnected = mWifi.IsConnected();
-    
+
     if (!isConnected)
     {
         isConnected = mWifi.Connect(WIFI_CONNECTION_TIMEOUT);   // Can take some time (seconds)!
     }
 
     mLeds.SetColor(LedColor::Off);
-    
+
     return isConnected;
 }
 
@@ -246,7 +248,7 @@ bool Application::TryAcquiring()
     delay(ONE_SECOND);
 
     bool result = mHttp.Acquire();
-        
+
     mLeds.SetColor(LedColor::Off);
 
     return result;
@@ -267,7 +269,7 @@ bool Application::TryParsing()
     if (!result) { return false; }
 
     mBuildState = mHttp.getBuildState();
-    
+
     mLeds.SetColor(LedColor::Off);
 
     return result;
@@ -290,7 +292,7 @@ bool Application::TryDisplaying()
         case BuildState::NotBuild:  mLeds.SetColor(LedColor::Purple); break;
         case BuildState::NoState:   mLeds.SetColor(LedColor::White);  break;
         default:
-            mLogger.Log(LogLevel::ERROR, "Invalid BuildState!"); 
+            mLogger.Log(LogLevel::ERROR, "Invalid BuildState!");
             break;
     }
     delay(ONE_SECOND);

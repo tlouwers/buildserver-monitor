@@ -49,7 +49,7 @@ static const char versionString[] = "Buildserver Monitor v0.1";
 
 // Leds (NeoPixels)
 #define PIN_NEOPIXEL_DATA     2       // GPIO_2, pin on the ESP8266 (ESP-01) used as data line for the NeoPixels.
-#define NUMBER_OF_NEOPIXELS   8       // Must match the connected number of NeoPixels in the strand. 
+#define NUMBER_OF_NEOPIXELS   4       // Must match the connected number of NeoPixels in the strand. 
 
 
 #define REAL        1
