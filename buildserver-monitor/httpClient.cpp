@@ -1,18 +1,18 @@
 /**
  * \file httpClient.cpp
- * 
+ *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <jilvin.wiegmus@fourtress.nl> wrote this file. As long as you retain
  *          this notice you can do whatever you want with this stuff. If we
  *          meet some day, and you think this stuff is worth it, you can buy me
  *          a beer in return.
  *                                                                melip muskman
- * 
+ *
  * \brief   Wrapper for a http client.
- * 
+ *
  * \details Intended use is to provide an easier means to handle a http requests
  *          and retrieve data for a specified buildserver URL.
- * 
+ *
  * \date    01-2020
 */
 
@@ -54,18 +54,18 @@ httpClient::~httpClient()
 
 /**
  * \brief   Initialize the HTTPS connection.
- * \returns True if succesful, else false.
+ * \returns True if successful, else false.
  */
 bool httpClient::Init()
 {
   if (!mInit) {
     mLogger.Log(LogLevel::INFO, "Initializing http client");
-    client = new BearSSL::WiFiClientSecure();    
+    client = new BearSSL::WiFiClientSecure();
     if (client == NULL) {
       mLogger.Log(LogLevel::ERROR, "Cannot allocate memory for https client");
       return false;
     }
-    
+
     if (client->setFingerprint(SHA1_FINGERPRINT)) {
       mInit = true;
     } else {
@@ -82,7 +82,7 @@ bool httpClient::Init()
 
 /**
  * \brief     Acquire build JSON file from given Jenkins URL.
- * \returns   True if JOSN result could be acquired, else false.
+ * \returns   True if JSON result could be acquired, else false.
  */
 bool httpClient::Acquire()
 {
@@ -129,7 +129,7 @@ bool httpClient::Acquire()
     mLogger.Log(LogLevel::ERROR, message.c_str());
     return false;
   }
-  
+
   mLogger.Log(LogLevel::ALL, mJsonString.c_str());
   return true;
 }
@@ -204,7 +204,7 @@ BuildState httpClient::getBuildState()
  */
 bool httpClient::CheckValidHttpConfiguration(const std::string& username, const std::string& authentication_token, const std::string& jenkins_api_url, const uint8_t* fingerprint)
 {
-  if ( (username.compare("<YOUR_USRERNAME_HERE>") == 0) ||
+  if ( (username.compare("<YOUR_USERNAME_HERE>") == 0) ||
        (username.compare("") == 0) )
   {
     mLogger.Log(LogLevel::WARNING, "Username not configured.");
@@ -226,14 +226,14 @@ bool httpClient::CheckValidHttpConfiguration(const std::string& username, const 
   }
 
   bool result = false;
-  if (FINGERPRINT_SIZE < 1) 
+  if (FINGERPRINT_SIZE < 1)
   {
     mLogger.Log(LogLevel::WARNING, "Fingerprint size is 0.");
     return false;
   }
   if (fingerprint != NULL)
   {
-    for (auto i = 0; i < FINGERPRINT_SIZE; i++) 
+    for (auto i = 0; i < FINGERPRINT_SIZE; i++)
     {
       if (fingerprint[i] != 0xFF)
       {
@@ -241,12 +241,12 @@ bool httpClient::CheckValidHttpConfiguration(const std::string& username, const 
         break;
       }
     }
-  }  
+  }
   if (!result)
   {
     mLogger.Log(LogLevel::WARNING, "Fingerprint not configured.");
     return false;
   }
-  
+
   return true;
 }

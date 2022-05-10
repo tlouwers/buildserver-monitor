@@ -33,7 +33,7 @@ extern "C" {
 static const uint8_t FINGERPRINT_SIZE = 20;
 
 // Network
-static std::string    USERNAME = "<YOUR_USRERNAME_HERE>";                               // The Jenkins username.
+static std::string    USERNAME = "<YOUR_USERNAME_HERE>";                                // The Jenkins username.
 static std::string    BASIC_AUTHENTICATION_TOKEN = "<YOUR_AUTHENTICATION_TOKEN_HERE>";  // The basic authentication token needed for https requests.
 static std::string    JENKINS_API_URL = "<YOUR_JENKINS_API_URL_HERE>";                  // The Jenkins API URL needed to request the json data from.
 static const uint8_t  SHA1_FINGERPRINT[FINGERPRINT_SIZE] = {};                          // Fingerprint for Jenkins URL, expires on DATE, needs to be updated well before this date.

@@ -10,7 +10,7 @@
  *
  * \brief   Logging class (wrapper around Serial class).
  *
- * \details Intended use is to provide a consistent logging mechanism based upon 
+ * \details Intended use is to provide a consistent logging mechanism based upon
  *          the Serial for logging messages in various levels of detail.
  *
  * \author  T. Louwers <terry.louwers@fourtress.nl>
@@ -30,7 +30,7 @@
 /************************************************************************/
 /**
  * \brief   Constructor.
- * \details This assumes a 'Serial.begin(115200)' has been done in the 
+ * \details This assumes a 'Serial.begin(115200)' has been done in the
  *          main 'Setup()' function of the application.
  */
 Logging::Logging()
@@ -43,7 +43,7 @@ Logging::Logging()
  * \brief   Log a message to the Serial output.
  * \param   level   The log level of the message.
  * \param   message The null terminated string to log as message.
- * \returns True if succesful, else false.
+ * \returns True if successful, else false.
  */
 bool Logging::Log(LogLevel level, const char* message)
 {
@@ -54,7 +54,7 @@ bool Logging::Log(LogLevel level, const char* message)
     if (level <= mConfiguredLevel)
     {
         Serial.println(message);
-        
+
         return false;
     }
     return true;    // If log level lower than configured level we silently ignore the log message.
