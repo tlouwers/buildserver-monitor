@@ -1,5 +1,5 @@
 /**
- * \file Leds.hpp
+ * \file    Leds.hpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -10,7 +10,7 @@
  *
  * \brief   Led class (wrapper around NeoPixels).
  *
- * \details Intended use is to provide an easy means to setup and control the 
+ * \details Intended use is to provide an easy means to setup and control the
  *          connected NeoPixels.
  *
  * \author  T. Louwers <terry.louwers@fourtress.nl>

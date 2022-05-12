@@ -1,5 +1,5 @@
 /**
- * \file Logging.hpp
+ * \file    Logging.hpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -10,7 +10,7 @@
  *
  * \brief   Logging class (wrapper around Serial class).
  *
- * \details Intended use is to provide a consistent logging mechanism based upon 
+ * \details Intended use is to provide a consistent logging mechanism based upon
  *          the Serial for logging messages in various levels of detail.
  *
  * \author  T. Louwers <terry.louwers@fourtress.nl>

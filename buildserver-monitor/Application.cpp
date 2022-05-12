@@ -1,5 +1,5 @@
 /**
- * \file Application.cpp
+ * \file    Application.cpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -249,14 +249,17 @@ bool Application::TryAcquiring()
  */
 bool Application::TryParsing()
 {
+    mBuildState = BuildState::NoState;
+
     mLogger.Log(LogLevel::INFO, "Parsing branch status...");
+    if (mHttp.Parse())
+    {
+        mLogger.Log(LogLevel::INFO, "Retrieving build status...");
 
-    bool result = mHttp.Parse();
-    if (!result) { return false; }
-
-    mBuildState = mHttp.getBuildState();
-
-    return result;
+        mBuildState = mHttp.getBuildState();
+        return true;
+    }
+    return false;
 }
 
 /**
