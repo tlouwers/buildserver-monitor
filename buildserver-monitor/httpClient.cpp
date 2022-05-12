@@ -121,9 +121,16 @@ bool HttpClient::Acquire()
             // File found at server - put retrieved data into string to parse later
             if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
             {
-                mLogger.Log(LogLevel::INFO, "Http request succeeded, JSON retrieved");
-                mJsonString = https.getString();
-                result = true;
+                mLogger.Log(LogLevel::INFO, "Http request succeeded");
+                mJsonString = https.getString();        // Might trigger out of memory if full JSON file is requested (and reset the board)
+                if (mJsonString.length() > 0)
+                {
+                    result = true;
+                }
+                else
+                {
+                    mLogger.Log(LogLevel::ERROR, "API call to retrieve JSON content from http request failed");
+                }
             }
             else if (httpCode == HTTP_CODE_UNAUTHORIZED)
             {
@@ -159,7 +166,7 @@ bool HttpClient::Parse()
 {
     if (mJsonString == "") { return false; }
 
-    StaticJsonDocument<3000> doc;   // Keep the number low
+    StaticJsonDocument<200> doc;   // Keep the number low
     DeserializationError error = deserializeJson(doc, mJsonString);
 
     if (error) {
