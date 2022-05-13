@@ -77,6 +77,7 @@ bool Leds::Init()
         {
             mLogger.Log(LogLevel::INFO, "All leds off");
             mStrip.begin();             // INITIALIZE NeoPixel strip object (REQUIRED)
+            mStrip.setBrightness(128);  // Set the overall brightness to 50%
             mStrip.show();              // Turn OFF all pixels ASAP
             mInitialized = true;
             return true;

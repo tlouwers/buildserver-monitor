@@ -179,10 +179,14 @@ void Application::HandleSleeping()
 {
     mLogger.Log(LogLevel::INFO, "Sleeping");
 
-    if (mWifi.IsConnected())
-    {
-        mWifi.Disconnect();
-    }
+    // Info: https://community.blynk.cc/t/esp8266-light-sleep/13584
+    // When using light sleep, do NOT disconnect from the network.
+    // Using a delay will make the board go to light sleep after 10 seconds.
+
+//    if (mWifi.IsConnected())
+//    {
+//        mWifi.Disconnect();
+//    }
 
     // Do not turn of the leds here: during sleep the status of the build is to be displayed.
     delay(ONE_MINUTE);
