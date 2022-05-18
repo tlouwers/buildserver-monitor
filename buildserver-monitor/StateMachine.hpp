@@ -1,5 +1,5 @@
 /**
- * \file StateMachine.hpp
+ * \file    StateMachine.hpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -10,7 +10,7 @@
  *
  * \brief   Simple finite state machine class.
  *
- * \details Intended use is to provide an easier means to handle various states 
+ * \details Intended use is to provide an easier means to handle various states
  *          of the application, making it easier to handle recovery paths.
  *
  * \author  T. Louwers <terry.louwers@fourtress.nl>
@@ -68,7 +68,7 @@ public:
 private:
     ILogging& mLogger;
     State     mState;
-    
+
     // To print State to serial output
     std::string mStateTypes[7] =
     {

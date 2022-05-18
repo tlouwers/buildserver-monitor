@@ -1,5 +1,5 @@
 /**
- * \file WifiConnection.cpp
+ * \file    WifiConnection.cpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -30,7 +30,7 @@
 /************************************************************************/
 /* Constants                                                            */
 /************************************************************************/
-static constexpr uint32_t TIMEOUT_INCREMENT = 500;    // In milliseconds
+static constexpr uint32_t TIMEOUT_INCREMENT = 250;    // In milliseconds
 
 
 /************************************************************************/
@@ -96,7 +96,7 @@ bool WifiConnection::Connect(uint32_t timeout_ms)
             else
             {
                 mLogger.Log(LogLevel::INFO, "Attempt failed, retry...");
-                delay(250);
+                delay(TIMEOUT_INCREMENT);
             }
         }
     }
@@ -146,7 +146,7 @@ bool WifiConnection::CheckValidSSIDAndPassword(const char* ssid, const char* pas
         mLogger.Log(LogLevel::ERROR, "Empty pointer for password");
         return false;
     }
-  
+
     std::string configured_ssid(ssid);
     std::string configured_password(password);
 
@@ -175,6 +175,7 @@ bool WifiConnection::CheckValidSSIDAndPassword(const char* ssid, const char* pas
 bool WifiConnection::ConnectionAttempt(uint32_t timeout_ms)
 {
     WiFi.mode(WIFI_STA);
+    wifi_set_sleep_type(LIGHT_SLEEP_T);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
     if (!WiFi.isConnected())

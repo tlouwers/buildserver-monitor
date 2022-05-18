@@ -1,5 +1,5 @@
 /**
- * \file FakeWifiConnection.hpp
+ * \file    FakeWifiConnection.hpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -16,7 +16,7 @@
  * \author  T. Louwers <terry.louwers@fourtress.nl>
  * \date    05-2020
  */
- 
+
 #ifndef FAKE_WIFI_CONNECTION_HPP_
 #define FAKE_WIFI_CONNECTION_HPP_
 
@@ -32,7 +32,7 @@
 /* Class declaration                                                    */
 /************************************************************************/
 /**
- * \class   FakeWifiConnection class.
+ * \brief   Wrapper for WiFi connection.
  */
 class FakeWifiConnection final : public IWifiConnection
 {
@@ -42,7 +42,8 @@ public:
      * \param   logger    Logging class.
      */
     explicit FakeWifiConnection(const ILogging& logger) { (void)(logger); }
-	/**
+
+    /**
      * \brief   Destructor.
      */
     virtual ~FakeWifiConnection() {}
@@ -57,11 +58,13 @@ public:
         mConnected = true;
         return true;
     }
+
     /**
      * \brief   Check if connected via WiFi.
      * \returns True if connected, else false. Note: simulated state.
      */
     bool IsConnected() const override { return mConnected; }
+
     /**
      * \brief   Disconnect from WiFi network.
      * \returns Always succeeds since there is no hardware.
@@ -71,7 +74,7 @@ public:
         mConnected = false;
         return true;
     }
-    
+
 private:
     bool mConnected = false;
 };

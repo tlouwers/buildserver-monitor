@@ -1,5 +1,5 @@
 /**
- * \file Leds.cpp
+ * \file    Leds.cpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -10,7 +10,7 @@
  *
  * \brief   Led class (wrapper around NeoPixels).
  *
- * \details Intended use is to provide an easy means to setup and control the 
+ * \details Intended use is to provide an easy means to setup and control the
  *          connected NeoPixels.
  *
  * \author  T. Louwers <terry.louwers@fourtress.nl>
@@ -61,7 +61,7 @@ Leds::~Leds()
 
 /**
  * \brief   Initialized the leds with color off.
- * \returns True if init succesful, else false.
+ * \returns True if init successful, else false.
  */
 bool Leds::Init()
 {
@@ -77,6 +77,7 @@ bool Leds::Init()
         {
             mLogger.Log(LogLevel::INFO, "All leds off");
             mStrip.begin();             // INITIALIZE NeoPixel strip object (REQUIRED)
+            mStrip.setBrightness(128);  // Set the overall brightness to 50%
             mStrip.show();              // Turn OFF all pixels ASAP
             mInitialized = true;
             return true;
@@ -128,8 +129,8 @@ void Leds::SetColor(uint8_t led_number, LedColor color)
         {
             std::string message = "Set led [" + NumberToString(led_number) + "] to color [" + mLedColorTypes[static_cast<uint8_t>(color)] + "]";
             mLogger.Log(LogLevel::ALL, message.c_str());
-            
-            // Number is 1 higer than the index of the led in the strand
+
+            // Number is 1 higher than the index of the led in the strand
             mStrip.setPixelColor(led_number - 1, ConvertColor(color));
             mStrip.show();
         }
@@ -163,11 +164,11 @@ uint32_t Leds::ConvertColor(LedColor color)
         case LedColor::LightBlue: colorCode = mStrip.Color(  0, 255, 255); break;
         case LedColor::Blue:      colorCode = mStrip.Color(  0,   0, 255); break;
         case LedColor::White:     colorCode = mStrip.Color(255, 255, 255); break;
-      
+
         case LedColor::Off:   // Fall-thru
-        default:   
+        default:
             break;
     }
-    
+
     return colorCode;
 }

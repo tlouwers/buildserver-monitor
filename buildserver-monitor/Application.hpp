@@ -1,5 +1,5 @@
 /**
- * \file Application.hpp
+ * \file    Application.hpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -21,7 +21,7 @@
 /* Includes                                                             */
 /************************************************************************/
 #include "config.h"
-#include "timings.hpp"
+#include "Timings.hpp"
 #if (LEDS == REAL)
     #include "Leds.hpp"
 #else
@@ -35,7 +35,7 @@
     #include "FakeWifiConnection.hpp"
 #endif
 #if (HTTP == REAL)
-    #include "httpClient.hpp"
+    #include "HttpClient.hpp"
 #else
     #include "FakeHttpClient.hpp"
 #endif
@@ -69,8 +69,8 @@ private:
 #else
     FakeWifiConnection mWifi;
 #endif
-#if (HTTP == REAL) 
-    httpClient         mHttp;
+#if (HTTP == REAL)
+    HttpClient         mHttp;
 #else
     FakeHttpClient     mHttp;
 #endif

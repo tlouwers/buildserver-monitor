@@ -1,5 +1,5 @@
 /**
- * \file FakeLeds.hpp
+ * \file    FakeLeds.hpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain

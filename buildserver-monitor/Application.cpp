@@ -1,5 +1,5 @@
 /**
- * \file Application.cpp
+ * \file    Application.cpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -26,7 +26,9 @@
 /* Reset function declaration                                           */
 /************************************************************************/
 // https://www.instructables.com/id/two-ways-to-reset-arduino-in-software/
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 void(* resetFunc) (void) = 0;
+#endif
 
 
 /************************************************************************/
@@ -51,13 +53,11 @@ Application::Application() :
 bool Application::Init()
 {
     bool result = true;
-  
+
     mLogger.Log(LogLevel::INFO, versionString);
 
     if(!mLeds.Init()) { result = false; }
     if(!mHttp.Init()) { result = false; }
-
-    delay(ONE_SECOND);
 
     return result;
 }
@@ -81,7 +81,8 @@ void Application::Process()
         default:
             mLogger.Log(LogLevel::ERROR, "Invalid state!");
             delay(ONE_SECOND);
-            resetFunc();          // Resets the ESP-01
+            mLogger.Log(LogLevel::INFO, "Reset the board");
+            resetFunc();
             break;
     }
 }
@@ -95,11 +96,10 @@ void Application::Process()
  */
 void Application::HandleStartUp()
 {
-    mLogger.Log(LogLevel::INFO, "Handling StartUp");
+    mLogger.Log(LogLevel::INFO, "StartUp");
 
-    mLeds.SetColor(1, LedColor::Green);
-    delay(ONE_SECOND);
     mLeds.SetColor(LedColor::Off);
+    mLeds.SetColor(1, LedColor::Blue);
 
     mSM.SetState(State::Idle);
 }
@@ -109,7 +109,7 @@ void Application::HandleStartUp()
  */
 void Application::HandleIdle()
 {
-    mLogger.Log(LogLevel::INFO, "Handling Idle");
+    mLogger.Log(LogLevel::INFO, "Idle");
 
     if (TryConnect())
     {
@@ -126,7 +126,7 @@ void Application::HandleIdle()
  */
 void Application::HandleConnected()
 {
-    mLogger.Log(LogLevel::INFO, "Handling Connected");
+    mLogger.Log(LogLevel::INFO, "Connected");
 
     if (TryAcquiring())
     {
@@ -143,7 +143,7 @@ void Application::HandleConnected()
  */
 void Application::HandleParsing()
 {
-    mLogger.Log(LogLevel::INFO, "Handling Parsing");
+    mLogger.Log(LogLevel::INFO, "Parsing");
 
     if (TryParsing())
     {
@@ -160,15 +160,10 @@ void Application::HandleParsing()
  */
 void Application::HandleDisplaying()
 {
-    mLogger.Log(LogLevel::INFO, "Handling Displaying");
+    mLogger.Log(LogLevel::INFO, "Displaying");
 
     if (TryDisplaying())
     {
-        if (mWifi.IsConnected())
-        {
-            mWifi.Disconnect();
-        }
-      
         mSM.SetState(State::Sleeping);
     }
     else
@@ -182,104 +177,102 @@ void Application::HandleDisplaying()
  */
 void Application::HandleSleeping()
 {
-    mLogger.Log(LogLevel::INFO, "Handling Sleeping");
+    mLogger.Log(LogLevel::INFO, "Sleeping");
 
-    mLeds.SetColor(1, LedColor::Yellow);
-    delay(FIVE_SECONDS);
-    mLeds.SetColor(LedColor::Off);
+    // Info: https://community.blynk.cc/t/esp8266-light-sleep/13584
+    // When using light sleep, do NOT disconnect from the network.
+    // Using a delay will make the board go to light sleep after 10 seconds.
+
+//    if (mWifi.IsConnected())
+//    {
+//        mWifi.Disconnect();
+//    }
+
+    // Do not turn of the leds here: during sleep the status of the build is to be displayed.
+    delay(ONE_MINUTE);
 
     mSM.SetState(State::Idle);
 }
 
 /**
- * \brief   Worker method for the Error state.
+ * \brief   Error state. Disconnects from WiFi, blinks red led then resets the board.
  */
 void Application::HandleError()
 {
-    mLogger.Log(LogLevel::INFO, "Handling Error");
+    mLogger.Log(LogLevel::INFO, "Error");
 
-    mLeds.SetColor(LedColor::Red);
     if (mWifi.IsConnected())
     {
         mWifi.Disconnect();
     }
-    delay(ONE_SECOND);
-    mLeds.SetColor(LedColor::Off);
 
-    // Discuss: move to Sleeping state first? This would turn off WiFi/Leds/...
-    delay(FOUR_SECONDS);
+    // Blink red leds to indicate error
+    for (auto i = 0; i < 10; i++) {
+        mLeds.SetColor(LedColor::Red);
+        delay(HALF_SECOND);
+        mLeds.SetColor(LedColor::Off);
+        delay(HALF_SECOND);
+    }
 
-    mSM.SetState(State::Idle);
+    mLogger.Log(LogLevel::INFO, "Reset the board");
+    resetFunc();
 }
 
 /**
- * \brief   Dummy method to mimic an attempt to connect to the WiFi network.
- * \returns True, always.
+ * \brief   Try to connect to WiFi network (with given credentials).
+ * \returns True if connection could be established, else false.
  */
 bool Application::TryConnect()
 {
-    mLogger.Log(LogLevel::INFO, "Trying to connect...");
-
-    mLeds.SetColor(2, LedColor::Purple);
+    mLogger.Log(LogLevel::INFO, "Connecting to WiFi network...");
 
     bool isConnected = mWifi.IsConnected();
-    
+
     if (!isConnected)
     {
         isConnected = mWifi.Connect(WIFI_CONNECTION_TIMEOUT);   // Can take some time (seconds)!
     }
 
-    mLeds.SetColor(LedColor::Off);
-    
     return isConnected;
 }
 
 /**
- * \brief   Dummy method to mimic an attempt to acquire data from buildserver.
- * \returns True, always.
+ * \brief   Try to acquire JSON data from buildserver.
+ * \returns True if data could be acquired, else false.
  */
 bool Application::TryAcquiring()
 {
-    mLogger.Log(LogLevel::INFO, "Trying to acquire...");
+    mLogger.Log(LogLevel::INFO, "Acquiring status from Jenkins server...");
 
-    mLeds.SetColor(3, LedColor::Blue);
-    delay(ONE_SECOND);
-
-    bool result = mHttp.Acquire();
-        
-    mLeds.SetColor(LedColor::Off);
-
-    return result;
+    return mHttp.Acquire();
 }
 
 /**
- * \brief   Dummy method to mimic an attempt to parse buildserver data and retrieve a build status.
- * \returns True, always.
+ * \brief   Try to parse retrieved buildserver data for the branch build status.
+ * \returns True if data could be parsed, else false.
  */
 bool Application::TryParsing()
 {
-    mLogger.Log(LogLevel::INFO, "Trying to parse...");
+    mBuildState = BuildState::NoState;
 
-    mLeds.SetColor(4, LedColor::Red);
-    delay(ONE_SECOND);
+    mLogger.Log(LogLevel::INFO, "Parsing branch status...");
+    if (mHttp.Parse())
+    {
+        mLogger.Log(LogLevel::INFO, "Retrieving build status...");
 
-    bool result = mHttp.Parse();
-    if (!result) { return false; }
-
-    mBuildState = mHttp.getBuildState();
-    
-    mLeds.SetColor(LedColor::Off);
-
-    return result;
+        mBuildState = mHttp.getBuildState();
+        return true;
+    }
+    return false;
 }
 
 /**
- * \brief   Dummy method to mimic display of the found build status.
+ * \brief   Display build status.
  * \returns True, always.
  */
 bool Application::TryDisplaying()
 {
-    mLogger.Log(LogLevel::INFO, "Trying to display...");
+    mLogger.Log(LogLevel::INFO, "Displaying build status...");
 
     switch (mBuildState)
     {
@@ -290,13 +283,11 @@ bool Application::TryDisplaying()
         case BuildState::NotBuild:  mLeds.SetColor(LedColor::Purple); break;
         case BuildState::NoState:   mLeds.SetColor(LedColor::White);  break;
         default:
-            mLogger.Log(LogLevel::ERROR, "Invalid BuildState!"); 
+            mLogger.Log(LogLevel::ERROR, "Invalid BuildState!");
             break;
     }
-    delay(ONE_SECOND);
-    mLeds.SetColor(LedColor::Off);
 
-    mBuildState = BuildState::NoState;
+    // Do not turn of the leds here: during sleep the status of the build is to be displayed.
 
     return true;
 }

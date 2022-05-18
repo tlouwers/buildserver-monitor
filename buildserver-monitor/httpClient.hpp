@@ -1,18 +1,18 @@
 /**
- * \file httpClient.hpp
- * 
+ * \file    HttpClient.hpp
+ *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <jilvin.wiegmus@fourtress.nl> wrote this file. As long as you retain
  *          this notice you can do whatever you want with this stuff. If we
  *          meet some day, and you think this stuff is worth it, you can buy me
  *          a beer in return.
  *                                                                melip muskman
- * 
+ *
  * \brief   Wrapper for a http client.
- * 
+ *
  * \details Intended use is to provide an easier means to handle a http requests
  *          and retrieve data for a specified buildserver URL.
- * 
+ *
  * \date    01-2020
 */
 
@@ -38,18 +38,18 @@
 /**
    \brief   Wrapper for a Http connection.
 */
-class httpClient final : public IHttpClient
+class HttpClient final : public IHttpClient
 {
-  public:
-    explicit httpClient(ILogging& logger);
-    virtual ~httpClient();
+public:
+    explicit HttpClient(ILogging& logger);
+    virtual ~HttpClient();
 
     bool Init() override;
     bool Acquire() override;
     bool Parse() override;
     BuildState getBuildState() override;
 
-  private:
+private:
     ILogging& mLogger;
 
     HTTPClient https;
@@ -57,7 +57,7 @@ class httpClient final : public IHttpClient
 
     bool mInit;
     String mJsonString;
-    char* mResult;
+    String mResult;
 
     bool CheckValidHttpConfiguration(const std::string& username, const std::string& authentication_token, const std::string& jenkins_api_url, const uint8_t* fingerprint);
 };

@@ -1,5 +1,5 @@
 /**
- * \file IHttpClient.hpp
+ * \file    IHttpClient.hpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -48,7 +48,7 @@ enum class BuildState : uint8_t
 /* Class declaration                                                    */
 /************************************************************************/
 /**
- * \class 	IHttpClient interface class.
+ * \brief   IHttpClient interface class.
 */
 class IHttpClient
 {

@@ -1,5 +1,5 @@
 /**
- * \file wifi_config.h
+ * \file    wifi_config.h
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -42,8 +42,8 @@ static const uint32_t WIFI_CONNECTION_TIMEOUT = 15000;        // In milliseconds
 static const uint8_t  WIFI_NUMBER_OF_RETRIES  = 2;            // Connection retry attempts if initial connection attempt fails.
 
 // Network
-static const char*    WIFI_SSID     = "<YOUR_SSID_HERE>";     // The SSID of the WiFi network to connect to.
-static const char*    WIFI_PASSWORD = "<YOUR_PASSWD_HERE>";   // The password of the WiFi network to connect to.
+static const char WIFI_SSID[]     = "<YOUR_SSID_HERE>";       // The SSID of the WiFi network to connect to.
+static const char WIFI_PASSWORD[] = "<YOUR_PASSWD_HERE>";     // The password of the WiFi network to connect to.
 
 
 #ifdef __cplusplus
