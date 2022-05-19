@@ -16,8 +16,6 @@ namespace BuildserverMonitor
 
         #region Fields
 
-        // ManualResetEvent instances signal completion.  
-        private static ManualResetEvent connectDone = new ManualResetEvent(false);  
         private Socket clientSocket;
         private bool connected = false;
 
@@ -62,9 +60,6 @@ namespace BuildserverMonitor
 
                     btnConnection.Text = "Disconnect";
                     connected = true;
-
-                    // Wait until a connection is made (connected to server) before continuing.  
-                    connectDone.WaitOne(); 
                 }
                 catch (SocketException se)
                 {
@@ -82,23 +77,18 @@ namespace BuildserverMonitor
 
         #endregion
 
-        #region Public Methods
-
-        
+        #region Public Methods        
 
         #endregion
 
         #region Private Methods
 
-        private void ConnectCallback(IAsyncResult ar)
+        private void ConnectCallback(IAsyncResult asyn)
         {
             try
             {
                 // Complete the connection.  
-                clientSocket.EndConnect(ar);
-
-                // Signal that the connection has been made.  
-                connectDone.Set();
+                clientSocket.EndConnect(asyn);
 
                 MessageBox.Show("Connected to server: {0}", clientSocket.RemoteEndPoint.ToString());
             }
@@ -113,6 +103,7 @@ namespace BuildserverMonitor
             if (clientSocket != null)
             {
                 clientSocket.Close();
+                clientSocket = null;
             }
         }
 
