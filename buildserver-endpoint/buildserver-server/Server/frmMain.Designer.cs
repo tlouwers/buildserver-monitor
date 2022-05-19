@@ -32,8 +32,10 @@
             this.lblNumberOfConnectedClientsValue = new MetroFramework.Controls.MetroLabel();
             this.tbxPort = new MetroFramework.Controls.MetroTextBox();
             this.btnConnection = new MetroFramework.Controls.MetroButton();
-            this.tbxMessages = new MetroFramework.Controls.MetroTextBox();
             this.lblPort = new MetroFramework.Controls.MetroLabel();
+            this.lstBox = new MetroFramework.Controls.MetroListView();
+            this.btnTest1 = new MetroFramework.Controls.MetroButton();
+            this.btnTest2 = new MetroFramework.Controls.MetroButton();
             this.SuspendLayout();
             // 
             // lblNumberOfConnectedClients
@@ -95,37 +97,6 @@
             this.btnConnection.UseSelectable = true;
             this.btnConnection.Click += new System.EventHandler(this.btnConnection_Click);
             // 
-            // tbxMessages
-            // 
-            // 
-            // 
-            // 
-            this.tbxMessages.CustomButton.Image = null;
-            this.tbxMessages.CustomButton.Location = new System.Drawing.Point(28, 1);
-            this.tbxMessages.CustomButton.Name = "";
-            this.tbxMessages.CustomButton.Size = new System.Drawing.Size(459, 459);
-            this.tbxMessages.CustomButton.Style = MetroFramework.MetroColorStyle.Blue;
-            this.tbxMessages.CustomButton.TabIndex = 1;
-            this.tbxMessages.CustomButton.Theme = MetroFramework.MetroThemeStyle.Light;
-            this.tbxMessages.CustomButton.UseSelectable = true;
-            this.tbxMessages.CustomButton.Visible = false;
-            this.tbxMessages.Lines = new string[0];
-            this.tbxMessages.Location = new System.Drawing.Point(23, 116);
-            this.tbxMessages.MaxLength = 32767;
-            this.tbxMessages.Multiline = true;
-            this.tbxMessages.Name = "tbxMessages";
-            this.tbxMessages.PasswordChar = '\0';
-            this.tbxMessages.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.tbxMessages.SelectedText = "";
-            this.tbxMessages.SelectionLength = 0;
-            this.tbxMessages.SelectionStart = 0;
-            this.tbxMessages.ShortcutsEnabled = true;
-            this.tbxMessages.Size = new System.Drawing.Size(488, 461);
-            this.tbxMessages.TabIndex = 2;
-            this.tbxMessages.UseSelectable = true;
-            this.tbxMessages.WaterMarkColor = System.Drawing.Color.FromArgb(((int)(((byte)(109)))), ((int)(((byte)(109)))), ((int)(((byte)(109)))));
-            this.tbxMessages.WaterMarkFont = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Pixel);
-            // 
             // lblPort
             // 
             this.lblPort.AutoSize = true;
@@ -135,13 +106,47 @@
             this.lblPort.TabIndex = 5;
             this.lblPort.Text = "Port:";
             // 
+            // lstBox
+            // 
+            this.lstBox.Font = new System.Drawing.Font("Segoe UI", 12F);
+            this.lstBox.FullRowSelect = true;
+            this.lstBox.Location = new System.Drawing.Point(23, 120);
+            this.lstBox.Name = "lstBox";
+            this.lstBox.OwnerDraw = true;
+            this.lstBox.Size = new System.Drawing.Size(473, 457);
+            this.lstBox.TabIndex = 6;
+            this.lstBox.UseCompatibleStateImageBehavior = false;
+            this.lstBox.UseSelectable = true;
+            // 
+            // btnTest1
+            // 
+            this.btnTest1.Location = new System.Drawing.Point(609, 152);
+            this.btnTest1.Name = "btnTest1";
+            this.btnTest1.Size = new System.Drawing.Size(87, 23);
+            this.btnTest1.TabIndex = 8;
+            this.btnTest1.Text = "Send Test 1";
+            this.btnTest1.UseSelectable = true;
+            this.btnTest1.Click += new System.EventHandler(this.btnTest1_Click);
+            // 
+            // btnTest2
+            // 
+            this.btnTest2.Location = new System.Drawing.Point(609, 190);
+            this.btnTest2.Name = "btnTest2";
+            this.btnTest2.Size = new System.Drawing.Size(87, 23);
+            this.btnTest2.TabIndex = 9;
+            this.btnTest2.Text = "Send Test 2";
+            this.btnTest2.UseSelectable = true;
+            this.btnTest2.Click += new System.EventHandler(this.btnTest2_Click);
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 600);
+            this.Controls.Add(this.btnTest2);
+            this.Controls.Add(this.btnTest1);
+            this.Controls.Add(this.lstBox);
             this.Controls.Add(this.lblPort);
-            this.Controls.Add(this.tbxMessages);
             this.Controls.Add(this.btnConnection);
             this.Controls.Add(this.tbxPort);
             this.Controls.Add(this.lblNumberOfConnectedClientsValue);
@@ -163,8 +168,10 @@
         private MetroFramework.Controls.MetroLabel lblNumberOfConnectedClientsValue;
         private MetroFramework.Controls.MetroTextBox tbxPort;
         private MetroFramework.Controls.MetroButton btnConnection;
-        private MetroFramework.Controls.MetroTextBox tbxMessages;
         private MetroFramework.Controls.MetroLabel lblPort;
+        private MetroFramework.Controls.MetroListView lstBox;
+        private MetroFramework.Controls.MetroButton btnTest1;
+        private MetroFramework.Controls.MetroButton btnTest2;
 
     }
 }

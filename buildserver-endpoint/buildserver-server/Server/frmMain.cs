@@ -126,7 +126,7 @@ namespace BuildserverMonitor
                 // be called when the Main thread is free
                 // Do UI update on UI thread
                 object[] pList = { msg };
-                tbxMessages.BeginInvoke(new UpdateLBXMessagesCallback(OnUpdateLBXMessages), pList);
+                lstBox.BeginInvoke(new UpdateLBXMessagesCallback(OnUpdateLBXMessages), pList);
             }
             else
             {
@@ -143,10 +143,41 @@ namespace BuildserverMonitor
         {
             if (msg.Length > 0)
             {
-                StringBuilder sb = new StringBuilder(tbxMessages.Text);
-                sb.AppendLine(System.Environment.NewLine);
-                sb.AppendLine(msg);
-                tbxMessages.Text = sb.ToString();
+                lstBox.Items.Add(msg);
+            }
+        }
+
+        private void btnTest1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                byte[] messageBuf = System.Text.Encoding.UTF8.GetBytes("Test 1");
+
+                foreach (Socket workerSocket in workerSocketList)
+                {
+                    workerSocket.Send(messageBuf);
+                }
+            }
+            catch (SocketException se)
+            {
+                MessageBox.Show(se.Message);
+            }
+        }
+
+        private void btnTest2_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                byte[] messageBuf = System.Text.Encoding.UTF8.GetBytes("Test 2");
+
+                foreach (Socket workerSocket in workerSocketList)
+                {
+                    workerSocket.Send(messageBuf);
+                }
+            }
+            catch (SocketException se)
+            {
+                MessageBox.Show(se.Message);
             }
         }
 
@@ -284,11 +315,18 @@ namespace BuildserverMonitor
             String msg = "Client " + clientID + " Disconnected.";
             MessageBox.Show(msg);
 
-            // Remove the reference to the worker socket of the closed client
-            // so that this object will get garbage collected
-            workerSocketList[clientID - 1] = null;
-            Interlocked.Decrement(ref clientCount);
-            UpdateLBLNrClientsConnected(System.Convert.ToString(clientCount));
+            if (clientID > 0)
+            {
+                // Remove the reference to the worker socket of the closed client
+                // so that this object will get garbage collected
+                workerSocketList[clientID - 1] = null;
+                Interlocked.Decrement(ref clientCount);
+                UpdateLBLNrClientsConnected(System.Convert.ToString(clientCount));
+            }
+            else
+            {
+                MessageBox.Show("Error: invalid clientID");
+            }
         }
 
         private void CloseSockets()

@@ -1,10 +1,7 @@
 ﻿using MetroFramework.Forms;
 using System;
-using System.Collections;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading;
 using System.Windows.Forms;
 
 
@@ -12,7 +9,8 @@ namespace BuildserverMonitor
 {
     public partial class frmMain : MetroForm
     {
-        public delegate void UpdateLBLNrClientsCallback(String text);
+        public delegate void UpdateLBXMessagesCallback(String text);
+        public AsyncCallback pfnWorkerCallBack;
 
         #region Fields
 
@@ -30,7 +28,7 @@ namespace BuildserverMonitor
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            CloseSockets();
+            CloseConnection();
         }
         
         private void btnConnection_Click(object sender, System.EventArgs e)
@@ -68,16 +66,37 @@ namespace BuildserverMonitor
             }
             else
             {
-                CloseSockets();
+                CloseConnection();
 
                 connected = false;
                 btnConnection.Text = "Connect";
             }
         }
 
+        private void btnSendToServer_Click(object sender, EventArgs e)
+        {
+            if (tbxSendToServer.Text.Length > 0)
+            {
+                try
+                {
+                    if ((clientSocket != null) && (clientSocket.Connected))
+                    {
+                        byte[] messageBuf = System.Text.Encoding.UTF8.GetBytes(tbxSendToServer.Text);
+
+                        clientSocket.Send(messageBuf);
+                        tbxSendToServer.Clear();
+                    }
+                }
+                catch (SocketException se)
+                {
+                    MessageBox.Show(se.Message);
+                }
+            }
+        }
+
         #endregion
 
-        #region Public Methods        
+        #region Public Methods
 
         #endregion
 
@@ -90,15 +109,119 @@ namespace BuildserverMonitor
                 // Complete the connection.  
                 clientSocket.EndConnect(asyn);
 
+                connected = true;
+                btnConnection.Text = "Disconnect";
+
+                WaitForData();  // Wait for data asynchronously
+
                 MessageBox.Show("Connected to server: {0}", clientSocket.RemoteEndPoint.ToString());
             }
-            catch (Exception e)
+            catch (SocketException se)
             {
-                Console.WriteLine(e.ToString());
+                MessageBox.Show(se.Message);
             }
-        } 
+        }
 
-        private void CloseSockets()
+        public void WaitForData()
+        {
+            try
+            {
+                if (pfnWorkerCallBack == null)
+                {
+                    pfnWorkerCallBack = new AsyncCallback(OnDataReceived);
+                }
+
+                SocketPacket theSocPkt = new SocketPacket(clientSocket, 0);
+
+                // Start listening to the data asynchronously
+                clientSocket.BeginReceive(theSocPkt.Data,
+                                          0,
+                                          theSocPkt.Data.Length,
+                                          SocketFlags.None,
+                                          pfnWorkerCallBack,
+                                          theSocPkt);
+            }
+            catch (SocketException se)
+            {
+                MessageBox.Show(se.Message);
+            }
+        }
+
+        public void OnDataReceived(IAsyncResult asyn)
+        {
+            SocketPacket theSocPkt = (SocketPacket)asyn.AsyncState;
+
+            try
+            {
+                Int32 iRx = theSocPkt.Socket.EndReceive(asyn);
+                System.Text.Decoder decoder = System.Text.Encoding.UTF8.GetDecoder();
+
+                byte[] buffer = new byte[iRx];
+                Array.Copy(theSocPkt.Data, 0, buffer, 0, iRx);
+
+                System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding();
+                String szData = enc.GetString(buffer, 0, buffer.Length);
+
+                AppendToLBXMessages(szData);
+
+                WaitForData();
+            }
+            catch (ObjectDisposedException ode)
+            {
+                MessageBox.Show(ode.Message, "Socket closed");
+            }
+            catch (SocketException se)
+            {
+                if (se.ErrorCode == 10054) // Error code for: Connection reset by peer
+                {
+                    String msg = "Server disconnected.";
+                    MessageBox.Show(msg);
+
+                    CloseConnection();
+
+                    connected = false;
+                    btnConnection.Text = "Connect";
+                }
+                else
+                {
+                    MessageBox.Show(se.Message);
+                }
+            }
+        }
+
+        // This method could be called by either the main thread or any of the
+        // worker threads
+        private void AppendToLBXMessages(String msg)
+        {
+            // Check to see if this method is called from a thread 
+            // other than the one created the control
+            if (InvokeRequired)
+            {
+                // We cannot update the GUI on this thread.
+                // All GUI controls are to be updated by the main (GUI) thread.
+                // Hence we will use the invoke method on the control which will
+                // be called when the Main thread is free
+                // Do UI update on UI thread
+                object[] pList = { msg };
+                lbxMessages.BeginInvoke(new UpdateLBXMessagesCallback(OnUpdateLBXMessages), pList);
+            }
+            else
+            {
+                // This is the main thread which created this control, hence update it
+                // directly 
+                OnUpdateLBXMessages(msg);
+            }
+        }
+
+        // This OnUpdateLBXMessages will be run back on the UI thread
+        // (using System.EventHandler signature so we don't need to
+        // define a new delegate type here)
+        private void OnUpdateLBXMessages(String msg)
+        {
+            lbxMessages.Items.Add(msg);
+        }
+
+        private void CloseConnection()
         {
             if (clientSocket != null)
             {
