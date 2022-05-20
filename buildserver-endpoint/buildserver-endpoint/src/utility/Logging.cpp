@@ -32,12 +32,11 @@
  * \brief   Constructor.
  * \details This assumes a 'Serial.begin(115200)' has been done in the
  *          main 'Setup()' function of the application.
+ * \param   level   The loglevel to use.
  */
-Logging::Logging()
-{
-    // Get the configured log level from 'config.h' file --> (int) to (uint8_t) to (LogLevel)
-    mConfiguredLevel = static_cast<LogLevel>(static_cast<uint8_t>(LOG_LEVEL));
-}
+Logging::Logging(LogLevel level) :
+    mConfiguredLevel(level)
+{ ; }
 
 /**
  * \brief   Log a message to the Serial output.

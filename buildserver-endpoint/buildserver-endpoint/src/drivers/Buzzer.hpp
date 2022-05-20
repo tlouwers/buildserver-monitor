@@ -48,7 +48,7 @@ public:
          * \brief   Constructor of the Buzzer configuration struct.
          * \param   pinID   The pin to which the Buzzer is attached.
          */
-        Config(uint8_t pinID) :
+        explicit Config(uint8_t pinID) :
             mPinID(pinID)
         { }
 

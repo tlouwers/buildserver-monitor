@@ -62,7 +62,12 @@ Timer::Timer(ILogging& logger) :
  */
 Timer::~Timer()
 {
-    Sleep();
+    if (mInitialized && mStarted)
+    {
+        mTimer.stopTimer();
+        mStarted = false;
+        mInitialized = false;
+    }
 }
 
 /**

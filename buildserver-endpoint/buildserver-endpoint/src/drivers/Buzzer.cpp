@@ -42,7 +42,8 @@ Buzzer::Buzzer(ILogging& logger) :
  */
 Buzzer::~Buzzer()
 {
-    Sleep();
+    digitalWrite(mPin, LOW);
+    mInitialized = false;
 }
 
 /**

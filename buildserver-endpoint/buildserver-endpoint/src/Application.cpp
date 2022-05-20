@@ -38,6 +38,8 @@ void(* resetFunc) (void) = 0;
  * \brief   Constructor.
  */
 Application::Application() :
+    // Get the configured log level from 'config.h' file --> (int) to (uint8_t) to (LogLevel)
+    mLogger(static_cast<LogLevel>(static_cast<uint8_t>(LOG_LEVEL))),
     mBattery(mLogger),
     mBuzzer(mLogger),
     mLeds(mLogger),

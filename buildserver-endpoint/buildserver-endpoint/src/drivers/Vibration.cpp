@@ -42,7 +42,8 @@ Vibration::Vibration(ILogging& logger) :
  */
 Vibration::~Vibration()
 {
-    Sleep();
+    digitalWrite(mPin, LOW);
+    mInitialized = false;
 }
 
 /**

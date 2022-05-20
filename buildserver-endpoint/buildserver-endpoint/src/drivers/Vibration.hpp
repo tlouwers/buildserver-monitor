@@ -48,7 +48,7 @@ public:
          * \brief   Constructor of the Vibration configuration struct.
          * \param   pinID   The pin to which the Vibration motor is attached.
          */
-        Config(uint8_t pinID) :
+        explicit Config(uint8_t pinID) :
             mPinID(pinID)
         { }
 

@@ -36,7 +36,7 @@
 class Logging final : public ILogging
 {
 public:
-    Logging();
+    explicit Logging(LogLevel level);
     virtual ~Logging() {};
 
     bool Log(LogLevel level, const char* message) override;

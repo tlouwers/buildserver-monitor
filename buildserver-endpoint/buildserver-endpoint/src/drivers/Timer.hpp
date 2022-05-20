@@ -69,7 +69,7 @@ public:
          * \brief   Constructor of the Timer configuration struct.
          * \param   milliseconds    Tick interval in milliseconds.
          */
-        Config(uint32_t milliseconds) :
+        explicit Config(uint32_t milliseconds) :
             mMilliseconds(milliseconds)
         { }
 
