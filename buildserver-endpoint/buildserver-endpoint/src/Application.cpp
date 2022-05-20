@@ -8,7 +8,7 @@
  *          a beer in return.
  *                                                                Terry Louwers
  *
- * \brief   Main application file for Buildserver Monitor.
+ * \brief   Main application file for Buildserver Endpoint.
  *
  * \author  T. Louwers <terry.louwers@fourtress.nl>
  * \date    01-2020
@@ -18,6 +18,7 @@
 /* Includes                                                             */
 /************************************************************************/
 #include <Arduino.h>
+#include "wifi_config.h"
 #include "Application.hpp"
 
 
@@ -36,45 +37,38 @@ void(* resetFunc) (void) = 0;
 /**
  * \brief   Constructor.
  */
-Application::Application()
+Application::Application() :
+    mLeds(mLogger),
+    mTimer(mLogger)
 { ; }
 
 bool Application::Init()
 {
-    bool result = mTimer.Init();
-    if (result)
-    {
-        Serial.println("Timer initialized");
+    bool result = true;
 
-        result = mBuzzer.Init();
-        if (result)
-        {
-            Serial.println("Buzzer initialized");
-        }
+    mLogger.Log(LogLevel::INFO, versionString);
 
-        result = mTimer.Start( [this]() { this->Tick(); } );
-        if (result)
-        {
-            Serial.println("Timer started");
-        }
-    }
+    if (!mLeds.Init()) { result = false; }
+    if (!mTimer.Init(Timer::Config(50))) { result = false; }
+
+    result = mTimer.Start( [this]() { this->Tick(); } );
 
     return result;
 }
 
 void Application::Process()
 {
-    uint16_t raw_adc = mBattery.Sample();
+    // uint16_t raw_adc = mBattery.Sample();
 
-    float voltage = mBattery.CalculateVoltage(raw_adc);
-    Serial.print("Voltage = ");
-    Serial.println(voltage);
+    // float voltage = mBattery.CalculateVoltage(raw_adc);
+    // Serial.print("Voltage = ");
+    // Serial.println(voltage);
 
-    float percentage = mBattery.CalculatePercentage(voltage);
-    Serial.print("Percentage = ");
-    Serial.println(percentage);
+    // float percentage = mBattery.CalculatePercentage(voltage);
+    // Serial.print("Percentage = ");
+    // Serial.println(percentage);
 
-    mBuzzer.Toggle();
+    // mBuzzer.Toggle();
 
     Serial.println("Idling...");
     delay(2000);

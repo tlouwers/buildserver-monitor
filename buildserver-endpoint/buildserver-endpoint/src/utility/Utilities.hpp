@@ -1,5 +1,5 @@
 /**
- * \file    Application.hpp
+ * \file    Utilities.hpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -8,60 +8,39 @@
  *          a beer in return.
  *                                                                Terry Louwers
  *
- * \brief   Main application file for Buildserver Endpoint.
+ * \brief   Various small helper functions.
  *
  * \author  T. Louwers <terry.louwers@fourtress.nl>
  * \date    01-2020
  */
 
-#ifndef APPLICATION_HPP_
-#define APPLICATION_HPP_
+#ifndef UTILITIES_HPP_
+#define UTILITIES_HPP_
 
 /************************************************************************/
 /* Includes                                                             */
 /************************************************************************/
-#include "config.h"
-//#include "Battery.hpp"
-//#include "Buzzer.hpp"
-#if (LEDS == REAL)
-    #include "drivers/Leds.hpp"
-#else
-    #include "drivers/FakeLeds.hpp"
-#endif
-#include "drivers/Timer.hpp"
-#include "utility/Logging.hpp"
-#include "utility/Timings.hpp"
+#include <cstdint>
+#include <sstream>
+#include <string>
 
 
 /************************************************************************/
-/* Class declaration                                                    */
+/* Template functions                                                   */
 /************************************************************************/
 /**
- * \brief   Main application class.
+ * \brief   Converts a number to a string.
+ * \details Work-around for the missing std::to_string() method.
+ * \param   number    The number to convert.
+ * \returns The number as string.
  */
-class Application
+template <typename T>
+std::string NumberToString(T number)
 {
-public:
-    Application();
-    virtual ~Application() {};
-
-    bool Init();
-    void Process();
-
-private:
-#if (LEDS == REAL)
-    Leds               mLeds;
-#else
-    FakeLeds           mLeds;
-#endif
-    Logging            mLogger;
-
-//    Battery mBattery;
-//    Buzzer  mBuzzer;
-    Timer   mTimer;
-
-    void Tick();
-};
+   std::ostringstream ss;
+   ss << number;
+   return ss.str();
+}
 
 
-#endif // APPLICATION_HPP_
+#endif  // UTILITIES_HPP_
