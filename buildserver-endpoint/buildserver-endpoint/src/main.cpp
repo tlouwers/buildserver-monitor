@@ -36,6 +36,7 @@ void setup()
     if ( ! mApp.Init() )
     {
         Serial.println("Error during init");
+        mApp.Error();
     }
 }
 

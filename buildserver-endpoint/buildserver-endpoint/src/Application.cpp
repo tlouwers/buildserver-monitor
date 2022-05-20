@@ -38,8 +38,11 @@ void(* resetFunc) (void) = 0;
  * \brief   Constructor.
  */
 Application::Application() :
+    mBattery(mLogger),
+    mBuzzer(mLogger),
     mLeds(mLogger),
-    mTimer(mLogger)
+    mTimer(mLogger),
+    mVibration(mLogger)
 { ; }
 
 bool Application::Init()
@@ -48,30 +51,48 @@ bool Application::Init()
 
     mLogger.Log(LogLevel::INFO, versionString);
 
-    if (!mLeds.Init()) { result = false; }
-    if (!mTimer.Init(Timer::Config(50))) { result = false; }
+    result &= mBuzzer.Init(Buzzer::Config(PIN_BUZZER));
+    result &= mVibration.Init(Vibration::Config(PIN_VIBRATION));
+    result &= mLeds.Init();
+    result &= mTimer.Init(Timer::Config(50));
 
-    result = mTimer.Start( [this]() { this->Tick(); } );
+    result &= mTimer.Start( [this]() { this->Tick(); } );
 
     return result;
 }
 
 void Application::Process()
 {
-    // uint16_t raw_adc = mBattery.Sample();
+    uint16_t raw_adc = mBattery.Sample();
+    float voltage = mBattery.CalculateVoltage(raw_adc);
+    float percentage = mBattery.CalculatePercentage(voltage);
 
-    // float voltage = mBattery.CalculateVoltage(raw_adc);
-    // Serial.print("Voltage = ");
-    // Serial.println(voltage);
-
-    // float percentage = mBattery.CalculatePercentage(voltage);
-    // Serial.print("Percentage = ");
-    // Serial.println(percentage);
-
-    // mBuzzer.Toggle();
+    mBuzzer.Toggle();
+    mVibration.Toggle();
 
     Serial.println("Idling...");
     delay(2000);
+}
+
+void Application::Error()
+{
+    mLogger.Log(LogLevel::ERROR, "Error");
+
+//    if (mWifi.IsConnected())
+//    {
+//        mWifi.Disconnect();
+//    }
+
+    // Blink red leds to indicate error
+    for (auto i = 0; i < 10; i++) {
+        mLeds.SetColor(LedColor::Red);
+        delay(HALF_SECOND);
+        mLeds.SetColor(LedColor::Off);
+        delay(HALF_SECOND);
+    }
+
+    mLogger.Log(LogLevel::INFO, "Reset the board");
+    resetFunc();
 }
 
 static uint8_t count = 0;
@@ -81,9 +102,5 @@ void Application::Tick()
     {
         count = 0;
         Serial.println("Tick");
-
-//        bool on = mBuzzer.IsOn();
-//        if (on) { mBuzzer.Off(); }
-//        else    { mBuzzer.On();  }
     }
 }

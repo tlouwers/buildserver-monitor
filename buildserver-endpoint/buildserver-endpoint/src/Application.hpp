@@ -21,14 +21,15 @@
 /* Includes                                                             */
 /************************************************************************/
 #include "config.h"
-//#include "Battery.hpp"
-//#include "Buzzer.hpp"
+#include "drivers/Battery.hpp"
+#include "drivers/Buzzer.hpp"
 #if (LEDS == REAL)
     #include "drivers/Leds.hpp"
 #else
     #include "drivers/FakeLeds.hpp"
 #endif
 #include "drivers/Timer.hpp"
+#include "drivers/Vibration.hpp"
 #include "utility/Logging.hpp"
 #include "utility/Timings.hpp"
 
@@ -47,18 +48,19 @@ public:
 
     bool Init();
     void Process();
+    void Error();
 
 private:
+    Logging            mLogger;
+    Battery            mBattery;
+    Buzzer             mBuzzer;
 #if (LEDS == REAL)
     Leds               mLeds;
 #else
     FakeLeds           mLeds;
 #endif
-    Logging            mLogger;
-
-//    Battery mBattery;
-//    Buzzer  mBuzzer;
-    Timer   mTimer;
+    Timer              mTimer;
+    Vibration          mVibration;
 
     void Tick();
 };
