@@ -2,6 +2,7 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Windows.Forms;
 
 
@@ -39,7 +40,7 @@ namespace BuildserverMonitor
                 {
                     if (tbxPort.Text == "")
                     {
-                        MessageBox.Show("Please enter a Port Number");
+                        MessageBox.Show("Please enter a Port Number", "Client");
                         return;
                     }
 
@@ -54,22 +55,22 @@ namespace BuildserverMonitor
                     clientSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
 
                     // Connect to the remote endpoint.  
-                    clientSocket.BeginConnect( remoteEP, new AsyncCallback(ConnectCallback), null);  
+                    clientSocket.BeginConnect( remoteEP, new AsyncCallback(ConnectCallback), null);
 
-                    btnConnection.Text = "Disconnect";
+                    SetBtnConnectionText("Disconnect");
                     connected = true;
                 }
                 catch (SocketException se)
                 {
-                    MessageBox.Show(se.Message);
+                    MessageBox.Show(se.Message, "Client");
                 }
             }
             else
             {
                 CloseConnection();
 
+                SetBtnConnectionText("Connect");
                 connected = false;
-                btnConnection.Text = "Connect";
             }
         }
 
@@ -89,7 +90,7 @@ namespace BuildserverMonitor
                 }
                 catch (SocketException se)
                 {
-                    MessageBox.Show(se.Message);
+                    MessageBox.Show(se.Message, "Client");
                 }
             }
         }
@@ -109,16 +110,31 @@ namespace BuildserverMonitor
                 // Complete the connection.  
                 clientSocket.EndConnect(asyn);
 
+                SetBtnConnectionText("Disconnect");
                 connected = true;
-                btnConnection.Text = "Disconnect";
 
                 WaitForData();  // Wait for data asynchronously
 
-                MessageBox.Show("Connected to server: {0}", clientSocket.RemoteEndPoint.ToString());
+                StringBuilder sb = new StringBuilder("Connected to server: ");
+                sb.Append(clientSocket.RemoteEndPoint.ToString());
+                MessageBox.Show(sb.ToString(), "Client");
             }
             catch (SocketException se)
             {
-                MessageBox.Show(se.Message);
+                if (se.ErrorCode == 10061) // Error code for: Server refused connection (maybe not started)
+                {
+                    String msg = "Server unavailable.";
+                    MessageBox.Show(msg, "Client");
+
+                    CloseConnection();
+
+                    connected = false;
+                    SetBtnConnectionText("Connect");
+                }
+                else
+                {
+                    MessageBox.Show(se.Message, "Client");
+                }
             }
         }
 
@@ -143,7 +159,7 @@ namespace BuildserverMonitor
             }
             catch (SocketException se)
             {
-                MessageBox.Show(se.Message);
+                MessageBox.Show(se.Message, "Client");
             }
         }
 
@@ -166,25 +182,21 @@ namespace BuildserverMonitor
 
                 WaitForData();
             }
-            catch (ObjectDisposedException ode)
-            {
-                MessageBox.Show(ode.Message, "Socket closed");
-            }
             catch (SocketException se)
             {
                 if (se.ErrorCode == 10054) // Error code for: Connection reset by peer
                 {
                     String msg = "Server disconnected.";
-                    MessageBox.Show(msg);
+                    MessageBox.Show(msg, "Client");
 
                     CloseConnection();
 
                     connected = false;
-                    btnConnection.Text = "Connect";
+                    SetBtnConnectionText("Connect");
                 }
                 else
                 {
-                    MessageBox.Show(se.Message);
+                    MessageBox.Show(se.Message, "Client");
                 }
             }
         }
@@ -219,6 +231,14 @@ namespace BuildserverMonitor
         private void OnUpdateLBXMessages(String msg)
         {
             lbxMessages.Items.Add(msg);
+        }
+
+        private void SetBtnConnectionText(string txt)
+        {
+            if (btnConnection.InvokeRequired)
+                btnConnection.Invoke(new Action(() => btnConnection.Text = txt));
+            else
+                btnConnection.Text = txt;
         }
 
         private void CloseConnection()

@@ -1,9 +1,8 @@
 ﻿using MetroFramework.Forms;
 using System;
-using System.Collections;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -18,8 +17,9 @@ namespace BuildserverMonitor
 
         #region Fields
 
-        private ArrayList workerSocketList = ArrayList.Synchronized(new System.Collections.ArrayList());
-        private int clientCount = 0;
+        private ConcurrentDictionary<int, Socket> workerSocketDict = new ConcurrentDictionary<int, Socket>();
+        private int clientIndex = 0;    // Ever incrementing Index as ID for the client(s) connecting to the Server
+        private Socket listenerSocket = null;
         private bool connected = false;
 
         #endregion
@@ -49,7 +49,7 @@ namespace BuildserverMonitor
                 {
                     if (tbxPort.Text == "")
                     {
-                        MessageBox.Show("Please enter a Port Number");
+                        MessageBox.Show("Please enter a Port Number", "Server");
                         return;
                     }
 
@@ -63,32 +63,36 @@ namespace BuildserverMonitor
                     IPEndPoint localEndPoint = new IPEndPoint(ipAddress, port);
 
                     // Create a Socket that will use the TCP protocol
-                    Socket listener = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    listenerSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    // Set LingerOption to false to be able to un-bind the socket later
+                    LingerOption lo = new LingerOption(false, 0);
+                    listenerSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, lo);                    
                     // A Socket must be associated with an endpoint using the Bind method
-                    listener.Bind(localEndPoint);
+                    listenerSocket.Bind(localEndPoint);
                     // Specify how many requests a Socket can listen to before it gives
-                    // the 'Server busy' response. Per default we will listen to 2 requests at a time
-                    listener.Listen(2);
+                    // the 'Server busy' response. Per default we will listen to 10 requests at a time
+                    listenerSocket.Listen(10);
 
-                    listener.BeginAccept(new AsyncCallback(OnClientConnect), listener);
+                    listenerSocket.BeginAccept(new AsyncCallback(OnClientConnect), listenerSocket);
 
-                    btnConnection.Text = "Disconnect";
+                    SetBtnConnectionText("Disconnect");
                     connected = true;
                 }
                 catch (SocketException se)
                 {
-                    MessageBox.Show(se.Message);
+                    MessageBox.Show(se.Message, "Server");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Server");
                 }
             }
             else
             {
                 CloseSockets();
 
+                SetBtnConnectionText("Connect");
                 connected = false;
-                btnConnection.Text = "Disconnected";
-
-                // Cannot call .Bind() again: just restart the application
-                btnConnection.Enabled = false;
             }
         }
 
@@ -153,14 +157,15 @@ namespace BuildserverMonitor
             {
                 byte[] messageBuf = System.Text.Encoding.UTF8.GetBytes("Test 1");
 
-                foreach (Socket workerSocket in workerSocketList)
+                foreach (var entry in workerSocketDict)
                 {
+                    Socket workerSocket = entry.Value;
                     workerSocket.Send(messageBuf);
                 }
             }
             catch (SocketException se)
             {
-                MessageBox.Show(se.Message);
+                MessageBox.Show(se.Message, "Server");
             }
         }
 
@@ -170,15 +175,24 @@ namespace BuildserverMonitor
             {
                 byte[] messageBuf = System.Text.Encoding.UTF8.GetBytes("Test 2");
 
-                foreach (Socket workerSocket in workerSocketList)
+                foreach (var entry in workerSocketDict)
                 {
+                    Socket workerSocket = entry.Value;
                     workerSocket.Send(messageBuf);
                 }
             }
             catch (SocketException se)
             {
-                MessageBox.Show(se.Message);
+                MessageBox.Show(se.Message, "Server");
             }
+        }
+
+        private void SetBtnConnectionText(string txt)
+        {
+            if (btnConnection.InvokeRequired)
+                btnConnection.Invoke(new Action(() => btnConnection.Text = txt));
+            else
+                btnConnection.Text = txt;
         }
 
         #endregion
@@ -201,29 +215,37 @@ namespace BuildserverMonitor
                 // a new Socket object
                 Socket workerSocket = listener.EndAccept(asyn);
 
-                // Add the workerSocket reference to our ArrayList
-                workerSocketList.Add(workerSocket);
+                // Now increment the client count for this client in a thread safe manner
+                Interlocked.Increment(ref clientIndex);
 
-                // Now increment the client count for this client 
-                // in a thread safe manner
-                Interlocked.Increment(ref clientCount);
-                UpdateLBLNrClientsConnected(System.Convert.ToString(clientCount));
+                // Add the client to the dictionary
+                if (workerSocketDict.ContainsKey(clientIndex))
+                {
+                    MessageBox.Show("Error: clientID already in dictionary", "Server");
+                }
+                workerSocketDict.TryAdd(clientIndex, workerSocket);
+
+                UpdateLBLNrClientsConnected(System.Convert.ToString(workerSocketDict.Count));
 
                 // Let the worker Socket do the further processing for the 
                 // just connected client
-                WaitForData(workerSocket, clientCount);
+                WaitForData(workerSocket, clientIndex);
 
                 // Since the main Socket is now free, it can go back and wait for
                 // other clients who are attempting to connect
                 listener.BeginAccept(new AsyncCallback(OnClientConnect), listener);
             }
-            catch (ObjectDisposedException ode)
+            catch (ObjectDisposedException)
             {
-                MessageBox.Show(ode.Message, "Socket closed");
+                // Ignore: happens when disconnecting the server
             }
             catch (SocketException se)
             {
-                MessageBox.Show(se.Message);
+                MessageBox.Show(se.Message, "Server");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Server");
             }
         }
 
@@ -251,7 +273,11 @@ namespace BuildserverMonitor
             }
             catch (SocketException se)
             {
-                MessageBox.Show(se.Message);
+                MessageBox.Show(se.Message, "Server");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Server");
             }
         }
 
@@ -259,82 +285,79 @@ namespace BuildserverMonitor
         // detects any client writing of data on the stream
         private void OnDataReceived(IAsyncResult asyn)
         {
-            SocketPacket socketData = (SocketPacket)asyn.AsyncState;
+            int clientID = -1;
 
             try
             {
-                if (socketData.Socket.Connected == false)
-                {
-                    ClientDisconnected(socketData.ID);
-                }
-                else
-                {
-                    // Complete the BeginReceive() asynchronous call by EndReceive() method
-                    // which will return the number of characters written to the stream
-                    // by the client
-                    Int32 iRx = socketData.Socket.EndReceive(asyn);
-                    byte[] buff = new byte[iRx + 1];
+                SocketPacket socketData = (SocketPacket)asyn.AsyncState;
+                clientID = socketData.ID;
 
-                    Array.Copy(socketData.Data, 0, buff, 0, iRx);
+                // Complete the BeginReceive() asynchronous call by EndReceive() method
+                // which will return the number of characters written to the stream
+                // by the client
+                Int32 iRx = socketData.Socket.EndReceive(asyn);
+                byte[] buff = new byte[iRx + 1];
 
-                    System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding();
-                    String szData = enc.GetString(buff);
+                Array.Copy(socketData.Data, 0, buff, 0, iRx);
 
-                    if (szData == "\0")
-                    {
-                        ClientDisconnected(socketData.ID);
-                    }
-                    else
-                    {
-                        AppendToLBXMessages(szData);
+                System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding();
+                String szData = enc.GetString(buff);
 
-                        // Continue the waiting for data on the Socket
-                        WaitForData(socketData.Socket, socketData.ID);
-                    }
-                }
+                AppendToLBXMessages(szData);
+
+                // Continue the waiting for data on the Socket
+                WaitForData(socketData.Socket, socketData.ID);
+            }
+            catch (ObjectDisposedException)
+            {
+                // Ignore: happens when disconnecting the server
             }
             catch (SocketException se)
             {
                 if (se.ErrorCode == 10054) // Error code for Connection reset by peer
                 {
-                    ClientDisconnected(socketData.ID);
+                    if (clientID != -1)
+                    {
+                        ClientDisconnected(clientID);
+                    }
+                    else
+                    {
+                        MessageBox.Show(se.Message, "Server");
+                    }
                 }
                 else
                 {
-                    MessageBox.Show(se.Message);
+                    MessageBox.Show(se.Message, "Server");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message, "Server");
             }
         }
 
         private void ClientDisconnected(int clientID)
         {
-            String msg = "Client " + clientID + " Disconnected.";
-            MessageBox.Show(msg);
+            String msg = "Client " + clientID + " disconnected.";
+            MessageBox.Show(msg, "Server");
 
-            if (clientID > 0)
+            // Remove the reference to the worker socket of the closed client
+            // so that this object will get garbage collected
+            Socket workerSocket = null;
+            if (workerSocketDict.TryRemove(clientID, out workerSocket))
             {
-                // Remove the reference to the worker socket of the closed client
-                // so that this object will get garbage collected
-                workerSocketList[clientID - 1] = null;
-                Interlocked.Decrement(ref clientCount);
-                UpdateLBLNrClientsConnected(System.Convert.ToString(clientCount));
+                workerSocket.Close();
+                workerSocket = null;
             }
-            else
-            {
-                MessageBox.Show("Error: invalid clientID");
-            }
+
+            UpdateLBLNrClientsConnected(System.Convert.ToString(workerSocketDict.Count));
         }
 
         private void CloseSockets()
         {
-            Socket workerSocket = null;
-            for (int i = 0; i < workerSocketList.Count; i++)
+            foreach (var entry in workerSocketDict)
             {
-                workerSocket = (Socket)workerSocketList[i];
+                Socket workerSocket = entry.Value;
                 if (workerSocket != null)
                 {
                     workerSocket.Close();
@@ -342,8 +365,16 @@ namespace BuildserverMonitor
                 }
             }
 
-            clientCount = 0;
-            UpdateLBLNrClientsConnected(System.Convert.ToString(clientCount));
+            workerSocketDict.Clear();
+
+            clientIndex = 0;
+            UpdateLBLNrClientsConnected(System.Convert.ToString(workerSocketDict.Count));
+
+            if (listenerSocket != null)
+            {
+                listenerSocket.Close();
+                listenerSocket = null;
+            }
         }
 
         #endregion
