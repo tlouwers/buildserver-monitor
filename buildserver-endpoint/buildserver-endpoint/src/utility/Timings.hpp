@@ -29,6 +29,7 @@
 /* Configurable options                                                 */
 /************************************************************************/
 // Timeouts - in milliseconds
+static constexpr unsigned QUARTER_SECOND =    250;
 static constexpr unsigned HALF_SECOND    =    500;
 static constexpr unsigned ONE_SECOND     =   1000;
 static constexpr unsigned TWO_SECONDS    =   2000;
