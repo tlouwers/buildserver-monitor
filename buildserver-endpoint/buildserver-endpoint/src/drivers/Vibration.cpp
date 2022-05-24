@@ -13,6 +13,12 @@
  * \details Intended use is to provide an easy means to control an external
  *          vibration motor via a pin toggle.
  *
+ * \note    The vibration motor does take some ramp-up time, do not use it for
+ *          very short periods (but more like 500 milliseconds or more).
+ *          During ram-up the power consumption is quite high, recommended is
+ *          to connect this to the power of the battery, not the 3.3V IO pin of
+ *          the Wemos board.
+ *
  * \author  T. Louwers <terry.louwers@fourtress.nl>
  * \date    05-2022
  */
@@ -22,6 +28,15 @@
 /************************************************************************/
 #include <string>
 #include "Vibration.hpp"
+
+
+/************************************************************************/
+/* Constants                                                            */
+/************************************************************************/
+// The hardware component is active high, meaning when the control pin is set
+// high the vibration motor is active (vibrating).
+static constexpr uint8_t ON  = HIGH;
+static constexpr uint8_t OFF = LOW;
 
 
 /************************************************************************/
@@ -42,7 +57,7 @@ Vibration::Vibration(ILogging& logger) :
  */
 Vibration::~Vibration()
 {
-    digitalWrite(mPin, LOW);
+    digitalWrite(mPin, OFF);
     mInitialized = false;
 }
 
@@ -97,7 +112,7 @@ bool Vibration::On()
 {
     if (mInitialized)
     {
-        digitalWrite(mPin, HIGH);
+        digitalWrite(mPin, ON);
         mLogger.Log(LogLevel::INFO, "Vibration ON");
         return true;
     }
@@ -127,7 +142,7 @@ bool Vibration::Off()
 {
     if (mInitialized)
     {
-        digitalWrite(mPin, LOW);
+        digitalWrite(mPin, OFF);
         mLogger.Log(LogLevel::INFO, "Vibration OFF");
         return true;
     }

@@ -25,6 +25,15 @@
 
 
 /************************************************************************/
+/* Constants                                                            */
+/************************************************************************/
+// The hardware component is active low, meaning when the control pin is set
+// low the buzzer is active (buzzing).
+static constexpr uint8_t ON  = LOW;
+static constexpr uint8_t OFF = HIGH;
+
+
+/************************************************************************/
 /* Public Methods                                                       */
 /************************************************************************/
 /**
@@ -42,7 +51,7 @@ Buzzer::Buzzer(ILogging& logger) :
  */
 Buzzer::~Buzzer()
 {
-    digitalWrite(mPin, LOW);
+    digitalWrite(mPin, OFF);
     mInitialized = false;
 }
 
@@ -97,7 +106,7 @@ bool Buzzer::On()
 {
     if (mInitialized)
     {
-        digitalWrite(mPin, HIGH);
+        digitalWrite(mPin, ON);
         mLogger.Log(LogLevel::INFO, "Buzzer ON");
         return true;
     }
@@ -113,7 +122,7 @@ bool Buzzer::IsOn() const
     if (mInitialized)
     {
         const bool result = digitalRead(mPin);
-        mLogger.Log(LogLevel::INFO, ((result) ? "Buzzer ON" : "Buzzer OFF"));
+        mLogger.Log(LogLevel::INFO, ((result) ? "Buzzer OFF" : "Buzzer ON"));
         return result;
     }
     return false;
@@ -127,7 +136,7 @@ bool Buzzer::Off()
 {
     if (mInitialized)
     {
-        digitalWrite(mPin, LOW);
+        digitalWrite(mPin, OFF);
         mLogger.Log(LogLevel::INFO, "Buzzer OFF");
         return true;
     }
@@ -144,7 +153,7 @@ bool Buzzer::Toggle()
     {
         const bool result = !digitalRead(mPin);     // Note: result already toggled to the state it should become
         digitalWrite(mPin, result);
-        mLogger.Log(LogLevel::INFO, ((result) ? "Buzzer ON" : "Buzzer OFF"));
+        mLogger.Log(LogLevel::INFO, ((result) ? "Buzzer OFF" : "Buzzer ON"));
         return true;
     }
     return false;
