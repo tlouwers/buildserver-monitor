@@ -18,7 +18,7 @@
 /* Includes                                                             */
 /************************************************************************/
 #include <Arduino.h>
-#include "wifi_config.h"
+#include "connection_config.h"
 #include "Application.hpp"
 
 
@@ -42,11 +42,19 @@ Application::Application() :
     mLogger(static_cast<LogLevel>(static_cast<uint8_t>(LOG_LEVEL))),
     mBattery(mLogger),
     mBuzzer(mLogger),
+    mData(mLogger),
     mLeds(mLogger),
     mTimer(mLogger),
-    mVibration(mLogger)
+    mVibration(mLogger),
+    mWifi(mLogger)
 { ; }
 
+/**
+ * \brief   Initialize the various peripherals, configures components, connects
+ *          to server and show the user the application is starting using the
+ *          leds.
+ * \returns True if init is successful, else false.
+ */
 bool Application::Init()
 {
     bool result = true;
@@ -58,11 +66,20 @@ bool Application::Init()
     result &= mLeds.Init();
     result &= mTimer.Init(Timer::Config(50));
 
+#warning ToDo: handler for wifi received complete packet? Parse chunk?
+    mData.SetHandler( [this](const uint8_t* data, uint16_t length) { this->HandleData(data, length); } );
+
+    result &= TryConnect();
+
     result &= mTimer.Start( [this]() { this->Tick(); } );
 
     return result;
 }
 
+/**
+ * \brief   Replacement for the main loop of the application: this handles the
+ *          data send/receive via the Process loop.
+ */
 void Application::Process()
 {
     uint16_t raw_adc = mBattery.Sample();
@@ -74,16 +91,22 @@ void Application::Process()
 
     Serial.println("Idling...");
     delay(2000);
+
+    mLeds.SetColor(LedColor::Off);
 }
 
+/**
+ * \brief   Error state. Disconnects from Server and WiFi, blinks red leds then
+ *          resets the board.
+ */
 void Application::Error()
 {
     mLogger.Log(LogLevel::ERROR, "Error");
 
-//    if (mWifi.IsConnected())
-//    {
-//        mWifi.Disconnect();
-//    }
+    if (mWifi.IsConnected())
+    {
+        mWifi.Disconnect();
+    }
 
     // Blink red leds to indicate error
     for (auto i = 0; i < 10; i++) {
@@ -97,6 +120,43 @@ void Application::Error()
     resetFunc();
 }
 
+
+/************************************************************************/
+/* Private Methods                                                      */
+/************************************************************************/
+/**
+ * \brief   Try to connect to the WiFi network, if this succeeds then try to
+ *          connect to the Server.
+ * \returns True if both connections succeed, else false.
+ */
+bool Application::TryConnect()
+{
+    mLeds.SetColor(1, LedColor::Blue);
+
+    bool wifiConnected = mWifi.IsConnected();
+    if (!wifiConnected)
+    {
+        wifiConnected = mWifi.Connect(WIFI_CONNECTION_TIMEOUT);   // Can take some time (seconds)!
+    }
+
+    bool dataConnected = false;
+    if (wifiConnected)
+    {
+        mLeds.SetColor(2, LedColor::Blue);
+        dataConnected = mData.Connect();
+    }
+
+    if (dataConnected)
+    {
+        mLeds.SetColor(LedColor::Green);
+    }
+
+    return dataConnected;
+}
+
+/**
+ * \brief   Callback (dummy) for timer tick to show HW timer is working.
+ */
 static uint8_t count = 0;
 void Application::Tick()
 {
@@ -105,4 +165,13 @@ void Application::Tick()
         count = 0;
         Serial.println("Tick");
     }
+}
+
+/**
+ * \brief   Callback (dummy) used to show data from Server is received.
+ */
+void Application::HandleData(const uint8_t* data, uint16_t length)
+{
+    #warning ToDo...
+    mLogger.Log(LogLevel::INFO, "Handling some data...");
 }

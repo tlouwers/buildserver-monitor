@@ -22,7 +22,7 @@
 /************************************************************************/
 #include <string>
 #include "config.h"
-#include "wifi_config.h"
+#include "connection_config.h"
 #include "WifiConnection.hpp"
 #include "utility/Timings.hpp"
 #include <ESP8266WiFi.h>
@@ -52,10 +52,9 @@ WifiConnection::WifiConnection(ILogging& logger) :
  */
 WifiConnection::~WifiConnection()
 {
-    if (mConnected)
-    {
-        Disconnect();
-    }
+    WiFi.disconnect();
+
+    mConnected   = false;
     mInitialized = false;
 }
 
@@ -69,7 +68,7 @@ bool WifiConnection::Connect(uint32_t timeout_ms)
     if (mConnected)
     {
         std::string ipString( WiFi.localIP().toString().c_str() );
-        std::string message = "WiFi connected to: [" + ipString + "]";
+        std::string message = "Connected with IP: [" + ipString + "]";
         mLogger.Log(LogLevel::INFO, message.c_str());
         return true;
     }
@@ -81,14 +80,14 @@ bool WifiConnection::Connect(uint32_t timeout_ms)
     }
 
     bool result = false;
-    if (CheckValidSSIDAndPassword(WIFI_SSID, WIFI_PASSWORD))    // Note: these values are taken from the 'wifi_config.h' file.
+    if (CheckValidSSIDAndPassword(WIFI_SSID, WIFI_PASSWORD))    // Note: these values are taken from the 'connection_config.h' file.
     {
         for (uint8_t i = 0; i < WIFI_NUMBER_OF_RETRIES; i++)
         {
             if (ConnectionAttempt(timeout_ms))
             {
                 std::string ipString( WiFi.localIP().toString().c_str() );
-                std::string message = "WiFi connected to: [" + ipString + "]";
+                std::string message = "Connected with IP: [" + ipString + "]";
                 mLogger.Log(LogLevel::INFO, message.c_str());
                 mConnected = true;
                 result = true;
@@ -105,7 +104,7 @@ bool WifiConnection::Connect(uint32_t timeout_ms)
 }
 
 /**
- * \brief   Check if connected ti WiFi.
+ * \brief   Check if connected to WiFi.
  * \result  Returns true if connected, else false.
  */
 bool WifiConnection::IsConnected() const
@@ -114,7 +113,7 @@ bool WifiConnection::IsConnected() const
 }
 
 /**
- * \brief   Disconnect (if connected);
+ * \brief   Disconnect (if connected).
  * \returns Always true.
  */
 bool WifiConnection::Disconnect()

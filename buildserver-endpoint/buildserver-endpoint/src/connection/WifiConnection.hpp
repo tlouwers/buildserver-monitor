@@ -24,6 +24,7 @@
 /* Includes                                                             */
 /************************************************************************/
 #include <cstdint>
+#include <functional>
 #include "interfaces/ILogging.hpp"
 #include "interfaces/IWifiConnection.hpp"
 
