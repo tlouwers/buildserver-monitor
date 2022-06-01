@@ -8,7 +8,7 @@
  *          a beer in return.
  *                                                                Terry Louwers
  *
- * \brief   Packet parser, concatinates incoming data into packets, provides
+ * \brief   Packet parser, concatenates incoming data into packets, provides
  *          validation and creates events on received messages.
  *
  * \author  T. Louwers <terry.louwers@fourtress.nl>

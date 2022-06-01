@@ -132,12 +132,12 @@ void DataConnection::Process()
         if (length > 0)
         {
             // Clear buffer first
-            memset(mBuffer, 0, DATA_CONNECTON_BUFFER_SIZE);
+            memset(mBuffer, 0, DATA_CONNECTION_BUFFER_SIZE);
 
             // Clip if more data is available than out buffer can hold
-            if (length > DATA_CONNECTON_BUFFER_SIZE)
+            if (length > DATA_CONNECTION_BUFFER_SIZE)
             {
-                length = DATA_CONNECTON_BUFFER_SIZE;
+                length = DATA_CONNECTION_BUFFER_SIZE;
             }
 
             // Read received data (from stream)
@@ -161,7 +161,7 @@ void DataConnection::Reset()
 {
     mClient.flush();
 
-    memset(mBuffer, 0, DATA_CONNECTON_BUFFER_SIZE);
+    memset(mBuffer, 0, DATA_CONNECTION_BUFFER_SIZE);
 }
 
 /**

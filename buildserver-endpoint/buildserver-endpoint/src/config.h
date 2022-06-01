@@ -54,7 +54,7 @@ static const char versionString[] = "Buildserver Endpoint v0.2";
 #define PIN_BUZZER                  12        // GPIO_12, pin on the ESP8266 used as On/Off for the buzzer.
 #define PIN_VIBRATION               13        // GPIO_13, pin on the ESP8266 used as On/Off for the vibration motor.
 
-#define DATA_CONNECTON_BUFFER_SIZE  64        // Internal buffer size of the data connection, in bytes.
+#define DATA_CONNECTION_BUFFER_SIZE 64        // Internal buffer size of the data connection, in bytes.
 #define PARSER_BUFFER_SIZE          1024      // Internal buffer size of the parser, in bytes.
 
 #define REAL                        1

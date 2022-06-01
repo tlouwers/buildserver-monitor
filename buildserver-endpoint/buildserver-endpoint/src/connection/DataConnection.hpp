@@ -53,7 +53,7 @@ private:
     bool       mInitialized;
     bool       mConnected;
     WiFiClient mClient;
-    uint8_t    mBuffer[DATA_CONNECTON_BUFFER_SIZE] = {};
+    uint8_t    mBuffer[DATA_CONNECTION_BUFFER_SIZE] = {};
     std::function<void(const uint8_t*, uint16_t)> mHandler;
 
 

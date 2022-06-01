@@ -132,7 +132,7 @@ bool WifiConnection::Disconnect()
  * \brief   Basic check to prevent the default or empty SSID and password.
  * \param   ssid      The WiFi SSID to check.
  * \param   password  The WiFi password to check.
- * \returns True if ssid and password are filled and not default.
+ * \returns True if 'ssid' and ''password' are filled and not default.
  */
 bool WifiConnection::CheckValidSSIDAndPassword(const char* ssid, const char* password)
 {
