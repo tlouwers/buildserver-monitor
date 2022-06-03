@@ -44,6 +44,7 @@ Application::Application() :
     mBuzzer(mLogger),
     mData(mLogger),
     mLeds(mLogger),
+    mPacketParser(mLogger),
     mTimer(mLogger),
     mVibration(mLogger),
     mWifi(mLogger)
@@ -67,7 +68,7 @@ bool Application::Init()
     result &= mTimer.Init(Timer::Config(50));
 
 #warning ToDo: handler for wifi received complete packet? Parse chunk?
-    mData.SetHandler( [this](const uint8_t* data, uint16_t length) { this->HandleData(data, length); } );
+    mData.SetHandler( [this](const uint8_t* data, uint16_t length) { mPacketParser.StoreData(data, length); } );
 
     result &= TryConnect();
 
@@ -88,6 +89,9 @@ void Application::Process()
 
     mBuzzer.Toggle();
     mVibration.Toggle();
+
+    mData.Process();
+    mPacketParser.Process();
 
     Serial.println("Idling...");
     delay(2000);
@@ -165,13 +169,4 @@ void Application::Tick()
         count = 0;
         Serial.println("Tick");
     }
-}
-
-/**
- * \brief   Callback (dummy) used to show data from Server is received.
- */
-void Application::HandleData(const uint8_t* data, uint16_t length)
-{
-    #warning ToDo...
-    mLogger.Log(LogLevel::INFO, "Handling some data...");
 }

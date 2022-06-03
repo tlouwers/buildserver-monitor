@@ -33,6 +33,7 @@
 #else
     #include "drivers/FakeLeds.hpp"
 #endif
+#include "connection/PacketParser.hpp"
 #include "drivers/Timer.hpp"
 #include "drivers/Vibration.hpp"
 #if (WIFI == REAL)
@@ -74,6 +75,7 @@ private:
 #else
     FakeLeds           mLeds;
 #endif
+    PacketParser       mPacketParser;
     Timer              mTimer;
     Vibration          mVibration;
 #if (WIFI == REAL)
@@ -84,9 +86,6 @@ private:
 
     bool TryConnect();
     void Tick();
-
-    // Dummy
-    void HandleData(const uint8_t* data, uint16_t length);
 };
 
 

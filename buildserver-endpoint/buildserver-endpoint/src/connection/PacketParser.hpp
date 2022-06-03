@@ -21,9 +21,10 @@
 /************************************************************************/
 /* Includes                                                             */
 /************************************************************************/
-#include <array>
 #include <cstdint>
 #include <functional>
+#include <CircularBuffer.h>
+#include <CRC8.h>
 #include "config.h"
 #include "interfaces/ILogging.hpp"
 
@@ -40,13 +41,18 @@ public:
     explicit PacketParser(ILogging& logger);
     virtual ~PacketParser();
 
+    void StoreData(const uint8_t* data, uint16_t length);
     void Reset();
 
-    void Parse(const uint8_t* data, uint16_t length);
+    void Process();
+
+    void SetHandler(const std::function<void(const uint8_t* data, uint16_t length)>& handler);
 
 private:
     ILogging& mLogger;
-    std::array<uint8_t, PARSER_BUFFER_SIZE> mBuffer;
+    CircularBuffer<uint8_t, PARSER_BUFFER_SIZE> mBuffer;
+    CRC8 mCrc;
+    std::function<void(const uint8_t*, uint16_t)> mHandler;
 };
 
 
