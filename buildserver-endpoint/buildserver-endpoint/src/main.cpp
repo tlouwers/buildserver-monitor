@@ -21,6 +21,7 @@
 #include "Application.hpp"
 
 
+/** Main application */
 Application mApp;
 
 

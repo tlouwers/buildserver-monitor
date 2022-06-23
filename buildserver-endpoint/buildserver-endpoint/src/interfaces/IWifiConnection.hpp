@@ -1,5 +1,5 @@
-/**
- * \file    Battery.hpp
+ /**
+ * \file    IWifiConnection.hpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -8,45 +8,37 @@
  *          a beer in return.
  *                                                                Terry Louwers
  *
- * \brief   Battery class (specific for the Wemos Lolin D1 mini Pro board).
+ * \brief   WiFi connection interface class.
  *
- * \details Intended use is to provide an easy means to measure the battery.
+ * \details This class is intended to act as interface for the WifiConnection class,
+ *          to ease unit testing.
  *
  * \author  T. Louwers <terry.louwers@fourtress.nl>
- * \date    05-2022
+ * \date    05-2020
  */
 
-#ifndef BATTERY_HPP_
-#define BATTERY_HPP_
+#ifndef IWIFI_CONNECTION_HPP_
+#define IWIFI_CONNECTION_HPP_
 
 /************************************************************************/
 /* Includes                                                             */
 /************************************************************************/
-#include <stdint.h>
-#include "interfaces/IBattery.hpp"
-#include "interfaces/ILogging.hpp"
+#include <cstdint>
 
 
 /************************************************************************/
-/* Class declaration                                                    */
+/* Interface declaration                                                */
 /************************************************************************/
 /**
- * \brief   Battery class.
+ * \brief   IWifiConnection interface class.
  */
-class Battery final : public IBattery
+class IWifiConnection
 {
 public:
-    explicit Battery(ILogging& logger);
-    virtual ~Battery() {};
-
-    uint16_t Sample() override;
-
-    float CalculateVoltage(uint16_t sample) override;
-    float CalculatePercentage(float voltage) override;
-
-private:
-    ILogging& mLogger;
+    virtual bool Connect(uint32_t timeout_ms) = 0;
+    virtual bool IsConnected() const = 0;
+    virtual bool Disconnect() = 0;
 };
 
 
-#endif // BATTERY_HPP_
+#endif  // IWIFI_CONNECTION_HPP_

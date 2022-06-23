@@ -23,13 +23,24 @@
 #include "config.h"
 #include "drivers/Battery.hpp"
 #include "drivers/Buzzer.hpp"
+#if (DATA == REAL)
+    #include "connection/DataConnection.hpp"
+#else
+    #include "connection/FakeDataConnection.hpp"
+#endif
 #if (LEDS == REAL)
     #include "drivers/Leds.hpp"
 #else
     #include "drivers/FakeLeds.hpp"
 #endif
+#include "connection/PacketParser.hpp"
 #include "drivers/Timer.hpp"
 #include "drivers/Vibration.hpp"
+#if (WIFI == REAL)
+    #include "connection/WifiConnection.hpp"
+#else
+    #include "connection/FakeWifiConnection.hpp"
+#endif
 #include "utility/Logging.hpp"
 #include "utility/Timings.hpp"
 
@@ -54,14 +65,26 @@ private:
     Logging            mLogger;
     Battery            mBattery;
     Buzzer             mBuzzer;
+#if (DATA == REAL)
+    DataConnection     mData;
+#else
+    FakeDataConnection mData;
+#endif
 #if (LEDS == REAL)
     Leds               mLeds;
 #else
     FakeLeds           mLeds;
 #endif
+    PacketParser       mPacketParser;
     Timer              mTimer;
     Vibration          mVibration;
+#if (WIFI == REAL)
+    WifiConnection     mWifi;
+#else
+    FakeWifiConnection mWifi;
+#endif
 
+    bool TryConnect();
     void Tick();
 };
 

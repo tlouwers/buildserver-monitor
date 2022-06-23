@@ -8,7 +8,7 @@
  *          a beer in return.
  *                                                                Terry Louwers
  *
- * \brief   Battery class (specific for the Wemos Lolin D1 mino Pro board).
+ * \brief   Battery class (specific for the Wemos Lolin D1 mini Pro board).
  *
  * \details Intended use is to provide an easy means to measure the battery.
  *

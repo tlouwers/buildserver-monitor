@@ -1,5 +1,5 @@
 /**
- * \file    Battery.hpp
+ * \file    WifiConnection.hpp
  *
  * \licence "THE BEER-WARE LICENSE" (Revision 42):
  *          <terry.louwers@fourtress.nl> wrote this file. As long as you retain
@@ -8,45 +8,51 @@
  *          a beer in return.
  *                                                                Terry Louwers
  *
- * \brief   Battery class (specific for the Wemos Lolin D1 mini Pro board).
+ * \brief   Wrapper for a WiFi connection.
  *
- * \details Intended use is to provide an easy means to measure the battery.
+ * \details Intended use is to provide an easier means to handle a WiFi connection
+ *          and retrieve data for a specified buildserver URL.
  *
  * \author  T. Louwers <terry.louwers@fourtress.nl>
- * \date    05-2022
+ * \date    01-2020
  */
 
-#ifndef BATTERY_HPP_
-#define BATTERY_HPP_
+#ifndef WIFI_CONNECTION_HPP_
+#define WIFI_CONNECTION_HPP_
 
 /************************************************************************/
 /* Includes                                                             */
 /************************************************************************/
-#include <stdint.h>
-#include "interfaces/IBattery.hpp"
+#include <cstdint>
+#include <functional>
 #include "interfaces/ILogging.hpp"
+#include "interfaces/IWifiConnection.hpp"
 
 
 /************************************************************************/
 /* Class declaration                                                    */
 /************************************************************************/
 /**
- * \brief   Battery class.
+ * \brief   Wrapper for a WiFi connection.
  */
-class Battery final : public IBattery
+class WifiConnection final : public IWifiConnection
 {
 public:
-    explicit Battery(ILogging& logger);
-    virtual ~Battery() {};
+    explicit WifiConnection(ILogging& logger);
+    virtual ~WifiConnection();
 
-    uint16_t Sample() override;
-
-    float CalculateVoltage(uint16_t sample) override;
-    float CalculatePercentage(float voltage) override;
+    bool Connect(uint32_t timeout_ms) override;
+    bool IsConnected() const override;
+    bool Disconnect() override;
 
 private:
     ILogging& mLogger;
+    bool      mInitialized;
+    bool      mConnected;
+
+    bool CheckValidSSIDAndPassword(const char* ssid, const char* password);
+    bool ConnectionAttempt(uint32_t timeout_ms);
 };
 
 
-#endif // BATTERY_HPP_
+#endif  // WIFI_CONNECTION_HPP_

@@ -21,9 +21,12 @@
 /* Defines                                                              */
 /************************************************************************/
 // Required for the 'ESP8266TimerInterrupt' module: select a timer divider.
-#define USING_TIM_DIV1      true    // for shortest and most accurate timer
-#define USING_TIM_DIV16     false   // for medium time and medium accurate timer
-#define USING_TIM_DIV256    false   // for longest timer but least accurate. Default
+/** For the shortest and most accurate timer */
+#define USING_TIM_DIV1      true
+/** For medium time and medium accurate timer */
+#define USING_TIM_DIV16     false
+/** For the longest timer, but least accurate. Default. */
+#define USING_TIM_DIV256    false
 
 
 #ifndef TIMER_HPP_

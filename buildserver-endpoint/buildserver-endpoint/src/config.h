@@ -38,30 +38,32 @@ extern "C" {
 static const char versionString[] = "Buildserver Endpoint v0.2";
 
 // Available log levels
-#define LOG_LEVEL_OFF         1
-#define LOG_LEVEL_ERROR       2
-#define LOG_LEVEL_WARNING     3
-#define LOG_LEVEL_INFO        4
-#define LOG_LEVEL_ALL         5
+#define LOG_LEVEL_OFF               1
+#define LOG_LEVEL_ERROR             2
+#define LOG_LEVEL_WARNING           3
+#define LOG_LEVEL_INFO              4
+#define LOG_LEVEL_ALL               5
 
-#define LOG_LEVEL             LOG_LEVEL_INFO
+#define LOG_LEVEL                   LOG_LEVEL_INFO
 
 
 // Leds (NeoPixels)
-#define PIN_NEOPIXEL_DATA     2       // GPIO_2, pin on the ESP8266 used as data line for the NeoPixels.
-#define NUMBER_OF_NEOPIXELS   4       // Must match the connected number of NeoPixels in the strand.
+#define PIN_NEOPIXEL_DATA           2         // GPIO_2, pin on the ESP8266 used as data line for the NeoPixels.
+#define NUMBER_OF_NEOPIXELS         4         // Must match the connected number of NeoPixels in the strand.
 
-#define PIN_BUZZER            12      // GPIO_12, pin on the ESP8266 used as On/Off for the buzzer.
-#define PIN_VIBRATION         13      // GPIO_13, pin on the ESP8266 used as On/Off for the vibration motor.
+#define PIN_BUZZER                  12        // GPIO_12, pin on the ESP8266 used as On/Off for the buzzer.
+#define PIN_VIBRATION               13        // GPIO_13, pin on the ESP8266 used as On/Off for the vibration motor.
 
+#define DATA_CONNECTION_BUFFER_SIZE 64        // Internal buffer size of the data connection, in bytes.
+#define PARSER_BUFFER_SIZE          1024      // Internal buffer size of the parser, in bytes.
 
-#define REAL                  1
-#define SIMULATED             2
+#define REAL                        1
+#define SIMULATED                   2
 
 // Simulation
-#define LEDS                  REAL
-#define WIFI                  REAL
-#define HTTP                  REAL
+#define LEDS                        REAL
+#define WIFI                        REAL
+#define DATA                        REAL
 
 
 #ifdef __cplusplus
