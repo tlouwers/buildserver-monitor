@@ -7,7 +7,7 @@
     <ProjectGuid>{AC244164-0AB6-49F7-9953-D8E4C342CAD3}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Client</RootNamespace>
+    <RootNamespace>BuildserverMonitor</RootNamespace>
     <AssemblyName>Client</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -43,6 +43,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -53,16 +54,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="bsmProtocol.cs" />
     <Compile Include="frmClient.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmClient.Designer.cs">
       <DependentUpon>frmClient.cs</DependentUpon>
     </Compile>
+    <Compile Include="Led.cs" />
+    <Compile Include="LedStrand.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SocketPacket.cs" />
+    <Compile Include="ProtocolHandler.cs" />
     <EmbeddedResource Include="frmClient.resx">
       <DependentUpon>frmClient.cs</DependentUpon>
     </EmbeddedResource>
@@ -89,6 +91,20 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BuildserverNetwork\BuildserverNetwork.csproj">
+      <Project>{3af06e27-5376-4105-8927-ae5461e7cdd8}</Project>
+      <Name>BuildserverNetwork</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BuildserverPacketParser\BuildserverPacketParser.csproj">
+      <Project>{3325ccff-ffdd-4287-af06-1832a78f704b}</Project>
+      <Name>BuildserverPacketParser</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LedBulb\LedBulb.csproj">
+      <Project>{18a6eec3-895d-44b9-8038-f53d6aa898b2}</Project>
+      <Name>LedBulb</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

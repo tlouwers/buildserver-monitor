@@ -1,8 +1,7 @@
 ﻿using MetroFramework.Forms;
 using System;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
+using System.ComponentModel;
+using System.Threading;
 using System.Windows.Forms;
 
 
@@ -10,67 +9,69 @@ namespace BuildserverMonitor
 {
     public partial class frmMain : MetroForm
     {
-        public delegate void UpdateLBXMessagesCallback(String text);
-        public AsyncCallback pfnWorkerCallBack;
-
         #region Fields
 
-        private Socket clientSocket;
-        private bool connected = false;
+        private Client mClient = new Client();
+        private bool mConnected = false;
+
+        
+        private PacketParser mParser = new PacketParser();
+        private ProtocolHandler mProtocol = new ProtocolHandler();
 
         #endregion
+
 
         #region UI Elements
 
         public frmMain()
         {
             InitializeComponent();
+
+            mClient.Connected += client_Connected;
+            mClient.Disconnected += client_Disconnected;
+            mClient.DataReceived += client_DataReceived;
+            mClient.Error += client_Error;
+
+            mParser.ContentReceived += mParser_ContentReceived;
+            mProtocol.Response += mProtocol_Response;
+
+            mProtocol.VersionResponse += mProtocol_VersionResponse;
+            mProtocol.LedAmountResponse += mProtocol_LedAmountResponse;
+            mProtocol.LedGetResponse += mProtocol_LedGetResponse;
+            mProtocol.LedSetResponse += mProtocol_LedSetResponse;
+
+            // Led UI events
+            mProtocol.LedColor += mProtocol_LedColor;
         }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            CloseConnection();
+            mClient.Disconnect();
         }
         
         private void btnConnection_Click(object sender, System.EventArgs e)
         {
-            if (!connected)
+            if (!mConnected)
             {
-                try
+                if (tbxAddress.Text.Length == 0)
                 {
-                    if (tbxPort.Text == "")
-                    {
-                        MessageBox.Show("Please enter a Port Number", "Client");
-                        return;
-                    }
-
-                    Int32 port = Convert.ToInt32(tbxPort.Text);
-
-                    // Establish the remote endpoint for the socket.  
-                    IPHostEntry ipHostInfo = Dns.GetHostEntry("localhost");  
-                    IPAddress ipAddress = ipHostInfo.AddressList[0];  
-                    IPEndPoint remoteEP = new IPEndPoint(ipAddress, port); 
-
-                    // Create a TCP/IP socket.  
-                    clientSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp); 
-
-                    // Connect to the remote endpoint.  
-                    clientSocket.BeginConnect( remoteEP, new AsyncCallback(ConnectCallback), null);
-
-                    SetBtnConnectionText("Disconnect");
-                    connected = true;
+                    MessageBox.Show("Please enter a Server address", "Client");
+                    return;
                 }
-                catch (SocketException se)
+
+                if (tbxPort.Text.Length == 0)
                 {
-                    MessageBox.Show(se.Message, "Client");
+                    MessageBox.Show("Please enter a Port Number", "Client");
+                    return;
                 }
+
+                UInt16 port = Convert.ToUInt16(tbxPort.Text);
+
+                mClient.Connect(tbxAddress.Text, port);
             }
             else
             {
-                CloseConnection();
-
-                SetBtnConnectionText("Connect");
-                connected = false;
+                mClient.Disconnect();
             }
         }
 
@@ -78,176 +79,208 @@ namespace BuildserverMonitor
         {
             if (tbxSendToServer.Text.Length > 0)
             {
-                try
-                {
-                    if ((clientSocket != null) && (clientSocket.Connected))
-                    {
-                        byte[] messageBuf = System.Text.Encoding.UTF8.GetBytes(tbxSendToServer.Text);
+                byte[] messageBuf = System.Text.Encoding.UTF8.GetBytes(tbxSendToServer.Text);
 
-                        clientSocket.Send(messageBuf);
-                        tbxSendToServer.Clear();
-                    }
-                }
-                catch (SocketException se)
-                {
-                    MessageBox.Show(se.Message, "Client");
-                }
+                mClient.Send(messageBuf);
             }
-        }
-
-        #endregion
-
-        #region Public Methods
-
-        #endregion
-
-        #region Private Methods
-
-        private void ConnectCallback(IAsyncResult asyn)
-        {
-            try
-            {
-                // Complete the connection.  
-                clientSocket.EndConnect(asyn);
-
-                SetBtnConnectionText("Disconnect");
-                connected = true;
-
-                WaitForData();  // Wait for data asynchronously
-
-                StringBuilder sb = new StringBuilder("Connected to server: ");
-                sb.Append(clientSocket.RemoteEndPoint.ToString());
-                MessageBox.Show(sb.ToString(), "Client");
-            }
-            catch (SocketException se)
-            {
-                if (se.ErrorCode == 10061) // Error code for: Server refused connection (maybe not started)
-                {
-                    String msg = "Server unavailable.";
-                    MessageBox.Show(msg, "Client");
-
-                    CloseConnection();
-
-                    connected = false;
-                    SetBtnConnectionText("Connect");
-                }
-                else
-                {
-                    MessageBox.Show(se.Message, "Client");
-                }
-            }
-        }
-
-        public void WaitForData()
-        {
-            try
-            {
-                if (pfnWorkerCallBack == null)
-                {
-                    pfnWorkerCallBack = new AsyncCallback(OnDataReceived);
-                }
-
-                SocketPacket theSocPkt = new SocketPacket(clientSocket, 0);
-
-                // Start listening to the data asynchronously
-                clientSocket.BeginReceive(theSocPkt.Data,
-                                          0,
-                                          theSocPkt.Data.Length,
-                                          SocketFlags.None,
-                                          pfnWorkerCallBack,
-                                          theSocPkt);
-            }
-            catch (SocketException se)
-            {
-                MessageBox.Show(se.Message, "Client");
-            }
-        }
-
-        public void OnDataReceived(IAsyncResult asyn)
-        {
-            SocketPacket theSocPkt = (SocketPacket)asyn.AsyncState;
-
-            try
-            {
-                Int32 iRx = theSocPkt.Socket.EndReceive(asyn);
-                System.Text.Decoder decoder = System.Text.Encoding.UTF8.GetDecoder();
-
-                byte[] buffer = new byte[iRx];
-                Array.Copy(theSocPkt.Data, 0, buffer, 0, iRx);
-
-                System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding();
-                String szData = enc.GetString(buffer, 0, buffer.Length);
-
-                AppendToLBXMessages(szData);
-
-                WaitForData();
-            }
-            catch (SocketException se)
-            {
-                if (se.ErrorCode == 10054) // Error code for: Connection reset by peer
-                {
-                    String msg = "Server disconnected.";
-                    MessageBox.Show(msg, "Client");
-
-                    CloseConnection();
-
-                    connected = false;
-                    SetBtnConnectionText("Connect");
-                }
-                else
-                {
-                    MessageBox.Show(se.Message, "Client");
-                }
-            }
-        }
-
-        // This method could be called by either the main thread or any of the
-        // worker threads
-        private void AppendToLBXMessages(String msg)
-        {
-            // Check to see if this method is called from a thread 
-            // other than the one created the control
-            if (InvokeRequired)
-            {
-                // We cannot update the GUI on this thread.
-                // All GUI controls are to be updated by the main (GUI) thread.
-                // Hence we will use the invoke method on the control which will
-                // be called when the Main thread is free
-                // Do UI update on UI thread
-                object[] pList = { msg };
-                lbxMessages.BeginInvoke(new UpdateLBXMessagesCallback(OnUpdateLBXMessages), pList);
-            }
-            else
-            {
-                // This is the main thread which created this control, hence update it
-                // directly 
-                OnUpdateLBXMessages(msg);
-            }
-        }
-
-        // This OnUpdateLBXMessages will be run back on the UI thread
-        // (using System.EventHandler signature so we don't need to
-        // define a new delegate type here)
-        private void OnUpdateLBXMessages(String msg)
-        {
-            lbxMessages.Items.Add(msg);
         }
 
         private void SetBtnConnectionText(string txt)
         {
             if (btnConnection.InvokeRequired)
+            {
                 btnConnection.Invoke(new Action(() => btnConnection.Text = txt));
+            }
             else
+            {
                 btnConnection.Text = txt;
+            }
         }
 
-        private void CloseConnection()
+        private void AddLstBoxItems(string txt)
         {
-            if (clientSocket != null)
+            if (lstBox.InvokeRequired)
             {
-                clientSocket.Close();
-                clientSocket = null;
+                lstBox.Invoke(new Action(() => lstBox.Items.Add(txt)));
             }
+            else
+            {
+                lstBox.Items.Add(txt);
+            }
+        }
+
+        private void ClearLstBoxItems()
+        {
+            if (lstBox.InvokeRequired)
+            {
+                lstBox.Invoke(new Action(() => lstBox.Items.Clear()));
+            }
+            else
+            {
+                lstBox.Items.Clear();
+            }
+        }
+
+        private void SetLed(Bulb.LedBulb led, Led.LedColor color)
+        {
+            if (led.InvokeRequired)
+            {
+                led.Invoke(new Action(() => { led.Color = GetLedColor(color); led.On = (color == Led.LedColor.Off) ? false : true; } ));
+            }
+            else
+            {
+                led.Color = GetLedColor(color);
+                led.On = (color == Led.LedColor.Off) ? false : true;
+            }
+        }
+
+        private void ClearLeds()
+        {
+            SetLed(ledBulb1, Led.LedColor.Off);
+            SetLed(ledBulb2, Led.LedColor.Off);
+            SetLed(ledBulb3, Led.LedColor.Off);
+            SetLed(ledBulb4, Led.LedColor.Off);
+        }
+
+        #endregion
+
+
+        #region Private Methods
+
+        private void client_Connected(object sender, string server_ip)
+        {
+            SetBtnConnectionText("Disconnect");
+            mConnected = true;
+
+            string msg = "Connected to server: " + server_ip;
+            MessageBox.Show(msg, "Client");
+        }
+
+        private void client_Disconnected(object sender)
+        {
+            SetBtnConnectionText("Connect");
+            mConnected = false;
+
+            ClearLstBoxItems();
+            ClearLeds();
+        }
+
+        private void client_DataReceived(object sender, byte[] data)
+        {
+            if ((data != null) && (data.Length > 0))
+            {
+                mParser.ParsePacket(data);
+            }
+        }
+
+        private void client_Error(object sender, string message)
+        {
+            if (message.Length > 0)
+            {
+                MessageBox.Show(message, "Client");
+            }
+        }
+
+        private void mParser_ContentReceived(object sender, byte[] content)
+        {
+            mProtocol.ParseCommand(content);
+        }
+
+        private void mProtocol_Response(object sender, byte[] content)
+        {
+            if ((content != null) && (content.Length > 0))
+            {
+                mClient.Send(mParser.CreatePacket(content));
+            }            
+        }
+
+        private void mProtocol_VersionResponse(object sender, string version)
+        {
+            AddLstBoxItems(version);
+        }
+
+        private void mProtocol_LedAmountResponse(object sender, int number_of_leds)
+        {
+            AddLstBoxItems("Number of leds: " + number_of_leds);
+        }
+
+        private void mProtocol_LedGetResponse(object sender, string led_content)
+        {
+            AddLstBoxItems("Led (get): " + led_content);
+        }
+
+        private void mProtocol_LedSetResponse(object sender, string led_content)
+        {
+            AddLstBoxItems("Led (set): " + led_content);
+        }
+
+        #region LedStrand Events
+
+        private void mProtocol_LedColor(object sender, Led.LedNumber number, Led.LedColor color)
+        {
+            switch (number)
+            {
+                case Led.LedNumber.One:
+                    SetLed(ledBulb1, color);
+                    break;
+                case Led.LedNumber.Two:
+                    SetLed(ledBulb2, color);
+                    break;
+                case Led.LedNumber.Three:
+                    SetLed(ledBulb3, color);
+                    break;
+                case Led.LedNumber.Four:
+                    SetLed(ledBulb4, color);
+                    break;
+                case Led.LedNumber.All:
+                    SetLed(ledBulb1, color);
+                    SetLed(ledBulb2, color);
+                    SetLed(ledBulb3, color);
+                    SetLed(ledBulb4, color);
+                    break;
+                default: break; // Ignore
+            };
+        }
+
+        #endregion
+
+        private System.Drawing.Color GetLedColor(Led.LedColor color)
+        {
+            System.Drawing.Color result = System.Drawing.Color.Black;
+
+            switch (color)
+            {
+                case Led.LedColor.Off:
+                    result = System.Drawing.Color.Black;
+                    break;
+                case Led.LedColor.Purple:
+                    result = System.Drawing.Color.Purple;
+                    break;
+                case Led.LedColor.Red:
+                    result = System.Drawing.Color.Red;
+                    break;
+                case Led.LedColor.Orange:
+                    result = System.Drawing.Color.Orange;
+                    break;
+                case Led.LedColor.Yellow:
+                    result = System.Drawing.Color.Yellow;
+                    break;
+                case Led.LedColor.Green:
+                    result = System.Drawing.Color.Green;
+                    break;
+                case Led.LedColor.LightBlue:
+                    result = System.Drawing.Color.LightBlue;
+                    break;
+                case Led.LedColor.Blue:
+                    result = System.Drawing.Color.Blue;
+                    break;
+                case Led.LedColor.White:
+                    result = System.Drawing.Color.White;
+                    break;
+                default: break;
+            };
+
+            return result;
         }
 
         #endregion

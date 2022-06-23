@@ -1,9 +1,8 @@
 ﻿using MetroFramework.Forms;
 using System;
-using System.Collections.Concurrent;
-using System.Net;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Net.Sockets;
-using System.Threading;
 using System.Windows.Forms;
 
 
@@ -11,369 +10,402 @@ namespace BuildserverMonitor
 {
     public partial class frmMain : MetroForm
     {
-        public delegate void UpdateLBXMessagesCallback(String text);
-        public delegate void UpdateLBLNrClientsCallback(String text);
-        public AsyncCallback pfnWorkerCallBack;
-
         #region Fields
 
-        private ConcurrentDictionary<int, Socket> workerSocketDict = new ConcurrentDictionary<int, Socket>();
-        private int clientIndex = 0;    // Ever incrementing Index as ID for the client(s) connecting to the Server
-        private Socket listenerSocket = null;
-        private bool connected = false;
+        private List<Int32> mClientList = new List<Int32>();
+        private Server mServer = new Server();
+        private bool mConnected = false;
+
+        private Led.LedNumber mNumberOfLeds = Led.LedNumber.Invalid;
+        private PacketParser mParser = new PacketParser();
+        private ProtocolHandler mProtocol = new ProtocolHandler();
 
         #endregion
+
 
         #region UI Elements
 
         public frmMain()
         {
             InitializeComponent();
+
+            mServer.ClientConnected += mServer_ClientConnected;
+            mServer.ClientDisconnected += mServer_ClientDisconnected;
+            mServer.Listening += mServer_Listening;
+            mServer.Closed += mServer_Closed;
+            mServer.DataReceived += mServer_DataReceived;
+            mServer.Error += mServer_Error;
+
+            mParser.ContentReceived += mParser_ContentReceived;
+
+            mProtocol.VersionResponse += mProtocol_VersionResponse;
+            mProtocol.LedAmountResponse += mProtocol_LedAmountResponse;
+            mProtocol.LedGetResponse += mProtocol_LedGetResponse;
+
+            cbxLedColor.SelectedIndex = 0;  // Off
         }
 
         private void frmMain_Load(object sender, EventArgs e)
         {
-            UpdateLBLNrClientsConnected(System.Convert.ToString(0));
+            SetLblNumberOfConnectedClientsValueText(System.Convert.ToString(mServer.NumberOfClientsConnected));
         }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            CloseSockets();
+            mServer.End();
         }
         
         private void btnConnection_Click(object sender, System.EventArgs e)
         {
-            if (!connected)
+            if (!mConnected)
             {
-                try
+                if (tbxPort.Text.Length == 0)
                 {
-                    if (tbxPort.Text == "")
-                    {
-                        MessageBox.Show("Please enter a Port Number", "Server");
-                        return;
-                    }
-
-                    Int32 port = Convert.ToInt32(tbxPort.Text);
-
-                    // Get Host IP Address that is used to establish a connection
-                    // In this case, we get one IP address of localhost that is IP: 127.0.0.1
-                    // If a host has multiple addresses, you will get a list of addresses
-                    IPHostEntry host = Dns.GetHostEntry("localhost");
-                    IPAddress ipAddress = host.AddressList[0];
-                    IPEndPoint localEndPoint = new IPEndPoint(ipAddress, port);
-
-                    // Create a Socket that will use the TCP protocol
-                    listenerSocket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    // Set LingerOption to false to be able to un-bind the socket later
-                    LingerOption lo = new LingerOption(false, 0);
-                    listenerSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Linger, lo);                    
-                    // A Socket must be associated with an endpoint using the Bind method
-                    listenerSocket.Bind(localEndPoint);
-                    // Specify how many requests a Socket can listen to before it gives
-                    // the 'Server busy' response. Per default we will listen to 10 requests at a time
-                    listenerSocket.Listen(10);
-
-                    listenerSocket.BeginAccept(new AsyncCallback(OnClientConnect), listenerSocket);
-
-                    SetBtnConnectionText("Disconnect");
-                    connected = true;
+                    MessageBox.Show("Please enter a Port Number", "Server");
+                    return;
                 }
-                catch (SocketException se)
-                {
-                    MessageBox.Show(se.Message, "Server");
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message, "Server");
-                }
+
+                UInt16 port = Convert.ToUInt16(tbxPort.Text);
+
+                mServer.Start("localhost", port);
             }
             else
             {
-                CloseSockets();
-
-                SetBtnConnectionText("Connect");
-                connected = false;
+                mServer.End();
             }
         }
 
-        private void UpdateLBLNrClientsConnected(String msg)
+        private void SetLblNumberOfConnectedClientsValueText(string txt)
         {
             if (lblNumberOfConnectedClientsValue.InvokeRequired)
             {
-                lblNumberOfConnectedClientsValue.BeginInvoke(new UpdateLBLNrClientsCallback(OnUpdateLBLNrClients), msg);
+                lblNumberOfConnectedClientsValue.Invoke(new Action(() => lblNumberOfConnectedClientsValue.Text = txt));
             }
             else
             {
-                OnUpdateLBLNrClients(msg);
-            }
-        }
-
-        // This OnUpdateLBLNrClients will be run back on the UI thread
-        // (using System.EventHandler signature so we don't need to
-        // define a new delegate type here)
-        private void OnUpdateLBLNrClients(String msg)
-        {
-            lblNumberOfConnectedClientsValue.Text = msg;
-        }
-
-        // This method could be called by either the main thread or any of the
-        // worker threads
-        private void AppendToLBXMessages(String msg)
-        {
-            // Check to see if this method is called from a thread 
-            // other than the one created the control
-            if (InvokeRequired)
-            {
-                // We cannot update the GUI on this thread.
-                // All GUI controls are to be updated by the main (GUI) thread.
-                // Hence we will use the invoke method on the control which will
-                // be called when the Main thread is free
-                // Do UI update on UI thread
-                object[] pList = { msg };
-                lstBox.BeginInvoke(new UpdateLBXMessagesCallback(OnUpdateLBXMessages), pList);
-            }
-            else
-            {
-                // This is the main thread which created this control, hence update it
-                // directly 
-                OnUpdateLBXMessages(msg);
-            }
-        }
-
-        // This OnUpdateLBXMessages will be run back on the UI thread
-        // (using System.EventHandler signature so we don't need to
-        // define a new delegate type here)
-        private void OnUpdateLBXMessages(String msg)
-        {
-            if (msg.Length > 0)
-            {
-                lstBox.Items.Add(msg);
-            }
-        }
-
-        private void btnTest1_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                byte[] messageBuf = System.Text.Encoding.UTF8.GetBytes("Test 1");
-
-                foreach (var entry in workerSocketDict)
-                {
-                    Socket workerSocket = entry.Value;
-                    workerSocket.Send(messageBuf);
-                }
-            }
-            catch (SocketException se)
-            {
-                MessageBox.Show(se.Message, "Server");
-            }
-        }
-
-        private void btnTest2_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                byte[] messageBuf = System.Text.Encoding.UTF8.GetBytes("Test 2");
-
-                foreach (var entry in workerSocketDict)
-                {
-                    Socket workerSocket = entry.Value;
-                    workerSocket.Send(messageBuf);
-                }
-            }
-            catch (SocketException se)
-            {
-                MessageBox.Show(se.Message, "Server");
+                lblNumberOfConnectedClientsValue.Text = txt;
             }
         }
 
         private void SetBtnConnectionText(string txt)
         {
             if (btnConnection.InvokeRequired)
+            {
                 btnConnection.Invoke(new Action(() => btnConnection.Text = txt));
+            }
             else
+            {
                 btnConnection.Text = txt;
+            }
+        }
+
+        private void AddLstBoxItems(string txt)
+        {
+            if (lstBox.InvokeRequired)
+            {
+                lstBox.Invoke(new Action(() => lstBox.Items.Add(txt)));
+            }
+            else
+            {
+                lstBox.Items.Add(txt);
+            }
+        }
+
+        private void ClearLstBoxItems()
+        {
+            if (lstBox.InvokeRequired)
+            {
+                lstBox.Invoke(new Action(() => lstBox.Items.Clear()));
+            }
+            else
+            {
+                lstBox.Items.Clear();
+            }
+        }
+
+        private void AddCbxLedIdItem(string item)
+        {
+            if (cbxLedId.InvokeRequired)
+            {
+                cbxLedId.Invoke(new Action(() => cbxLedId.Items.Add(item)));
+            }
+            else
+            {
+                cbxLedId.Items.Add(item);
+            }
+        }
+
+        private void ClearCbxLedIdItems()
+        {
+            if (cbxLedId.InvokeRequired)
+            {
+                cbxLedId.Invoke(new Action(() => cbxLedId.Items.Clear()));
+            }
+            else
+            {
+                cbxLedId.Items.Clear();
+            }
         }
 
         #endregion
 
-        #region Public Methods
 
-        #endregion
+        #region Buttons
 
-        #region Private Methods
-
-        // This is the callback function, which will be invoked when a client connects
-        private void OnClientConnect(IAsyncResult asyn)
+        private void btnVersionGet_Click(object sender, EventArgs e)
         {
-            try
-            {
-                Socket listener = (Socket)asyn.AsyncState;
+            byte[] content = new byte[2];
 
-                // Here we complete/end the BeginAccept() asynchronous call
-                // by calling EndAccept() - which returns the reference to
-                // a new Socket object
-                Socket workerSocket = listener.EndAccept(asyn);
+            content[0] = (byte)ProtocolHandler.Command.Version;
+            content[1] = (byte)ProtocolHandler.Version.Get;
 
-                // Now increment the client count for this client in a thread safe manner
-                Interlocked.Increment(ref clientIndex);
-
-                // Add the client to the dictionary
-                if (workerSocketDict.ContainsKey(clientIndex))
-                {
-                    MessageBox.Show("Error: clientID already in dictionary", "Server");
-                }
-                workerSocketDict.TryAdd(clientIndex, workerSocket);
-
-                UpdateLBLNrClientsConnected(System.Convert.ToString(workerSocketDict.Count));
-
-                // Let the worker Socket do the further processing for the 
-                // just connected client
-                WaitForData(workerSocket, clientIndex);
-
-                // Since the main Socket is now free, it can go back and wait for
-                // other clients who are attempting to connect
-                listener.BeginAccept(new AsyncCallback(OnClientConnect), listener);
-            }
-            catch (ObjectDisposedException)
-            {
-                // Ignore: happens when disconnecting the server
-            }
-            catch (SocketException se)
-            {
-                MessageBox.Show(se.Message, "Server");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Server");
-            }
+            PackageAndSendToClients(content);
         }
 
-        // Start waiting for data from the client
-        private void WaitForData(Socket soc, Int32 clientNumber)
+        private void btnLedsGetAmount_Click(object sender, EventArgs e)
         {
-            try
-            {
-                if (pfnWorkerCallBack == null)
-                {
-                    // Specify the call back function which is to be
-                    // invoked when there is any write activity by the
-                    // connected client
-                    pfnWorkerCallBack = new AsyncCallback(OnDataReceived);
-                }
+            byte[] content = new byte[2];
 
-                SocketPacket theSocPkt = new SocketPacket(soc, clientNumber);
+            content[0] = (byte)ProtocolHandler.Command.Leds;
+            content[1] = (byte)ProtocolHandler.Leds.GetAmount;
 
-                soc.BeginReceive(theSocPkt.Data,
-                                 0,
-                                 theSocPkt.Data.Length,
-                                 SocketFlags.None,
-                                 pfnWorkerCallBack,
-                                 theSocPkt);
-            }
-            catch (SocketException se)
-            {
-                MessageBox.Show(se.Message, "Server");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Server");
-            }
+            PackageAndSendToClients(content);
         }
 
-        // This the callback function which will be invoked when the socket
-        // detects any client writing of data on the stream
-        private void OnDataReceived(IAsyncResult asyn)
+        private void btnLedsGet_Click(object sender, EventArgs e)
         {
-            int clientID = -1;
-
-            try
+            if (mNumberOfLeds == Led.LedNumber.Invalid)
             {
-                SocketPacket socketData = (SocketPacket)asyn.AsyncState;
-                clientID = socketData.ID;
-
-                // Complete the BeginReceive() asynchronous call by EndReceive() method
-                // which will return the number of characters written to the stream
-                // by the client
-                Int32 iRx = socketData.Socket.EndReceive(asyn);
-                byte[] buff = new byte[iRx + 1];
-
-                Array.Copy(socketData.Data, 0, buff, 0, iRx);
-
-                System.Text.UTF8Encoding enc = new System.Text.UTF8Encoding();
-                String szData = enc.GetString(buff);
-
-                AppendToLBXMessages(szData);
-
-                // Continue the waiting for data on the Socket
-                WaitForData(socketData.Socket, socketData.ID);
+                MessageBox.Show("Request the number of leds first!", "Server");
             }
-            catch (ObjectDisposedException)
+            else
             {
-                // Ignore: happens when disconnecting the server
-            }
-            catch (SocketException se)
-            {
-                if (se.ErrorCode == 10054) // Error code for Connection reset by peer
+                if (cbxLedId.SelectedItem == null)
                 {
-                    if (clientID != -1)
-                    {
-                        ClientDisconnected(clientID);
-                    }
-                    else
-                    {
-                        MessageBox.Show(se.Message, "Server");
-                    }
+                    MessageBox.Show("Select a led Id to get first!", "Server");
                 }
                 else
                 {
-                    MessageBox.Show(se.Message, "Server");
+                    byte[] content = new byte[3];
+
+                    content[0] = (byte)ProtocolHandler.Command.Leds;
+                    content[1] = (byte)ProtocolHandler.Leds.Get;
+                    content[2] = (byte)StringToLedNumber(cbxLedId.SelectedItem.ToString());
+
+                    PackageAndSendToClients(content);
                 }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Server");
-            }
         }
 
-        private void ClientDisconnected(int clientID)
+        private void btnLedsSet_Click(object sender, EventArgs e)
         {
-            String msg = "Client " + clientID + " disconnected.";
-            MessageBox.Show(msg, "Server");
-
-            // Remove the reference to the worker socket of the closed client
-            // so that this object will get garbage collected
-            Socket workerSocket = null;
-            if (workerSocketDict.TryRemove(clientID, out workerSocket))
+            if (mNumberOfLeds == Led.LedNumber.Invalid)
             {
-                workerSocket.Close();
-                workerSocket = null;
+                MessageBox.Show("Request the number of leds first!", "Server");
             }
-
-            UpdateLBLNrClientsConnected(System.Convert.ToString(workerSocketDict.Count));
-        }
-
-        private void CloseSockets()
-        {
-            foreach (var entry in workerSocketDict)
+            else
             {
-                Socket workerSocket = entry.Value;
-                if (workerSocket != null)
+                Led.LedNumber ledNumber = StringToLedNumber(cbxLedId.SelectedItem.ToString());
+
+                byte[] content = null;
+
+                if (ledNumber != Led.LedNumber.All && ledNumber != Led.LedNumber.Invalid)
                 {
-                    workerSocket.Close();
-                    workerSocket = null;
+                    content = new byte[2 + Led.Length];
+
+                    Led led = new Led();
+                    led.Id = ledNumber;
+                    led.Color = StringToLedColor(cbxLedColor.SelectedItem.ToString());
+
+                    byte[] ledArr = led.ToArray();
+
+                    content[0] = (byte)ProtocolHandler.Command.Leds;
+                    content[1] = (byte)ProtocolHandler.Leds.Set;
+                    ledArr.CopyTo(content, 2);
+                }
+                else if (ledNumber == Led.LedNumber.All)
+                {
+                    int numberOfLeds = LedNumberToInt(mNumberOfLeds);
+
+                    content = new byte[2 + (numberOfLeds * Led.Length)];
+
+                    content[0] = (byte)ProtocolHandler.Command.Leds;
+                    content[1] = (byte)ProtocolHandler.Leds.Set;
+
+                    for (var i = 1; i <= numberOfLeds; i++)
+                    {
+                        Led led = new Led();
+                        led.Id = IntToLedNumber(i);
+                        led.Color = StringToLedColor(cbxLedColor.SelectedItem.ToString());
+
+                        byte[] ledArr = led.ToArray();
+
+                        ledArr.CopyTo(content, 2 + ((i - 1) * 9));
+                    }
+                }
+
+                if (content != null)
+                {
+                    PackageAndSendToClients(content);
+                }
+            }
+        }
+
+        #endregion
+
+
+        #region Private Methods
+
+        private void mServer_ClientConnected(object sender, int clientId)
+        {
+            mClientList.Add(clientId);
+
+            SetLblNumberOfConnectedClientsValueText(System.Convert.ToString(mServer.NumberOfClientsConnected));
+
+            string msg = "Client " + clientId + " connected.";
+            MessageBox.Show(msg, "Server");
+        }
+
+        private void mServer_ClientDisconnected(object sender, int clientId)
+        {
+            mClientList.Remove(clientId);
+
+            SetLblNumberOfConnectedClientsValueText(System.Convert.ToString(mServer.NumberOfClientsConnected));
+            
+            string msg = "Client " + clientId + " disconnected.";
+            MessageBox.Show(msg, "Server");
+        }
+
+        private void mServer_Listening(object sender)
+        {
+            SetBtnConnectionText("Disconnect");
+            mConnected = true;
+        }
+
+        private void mServer_Closed(object sender)
+        {
+            mClientList.Clear();
+
+            SetLblNumberOfConnectedClientsValueText(System.Convert.ToString(mServer.NumberOfClientsConnected));
+
+            SetBtnConnectionText("Connect");
+            mConnected = false;
+
+            ClearLstBoxItems();
+        }
+
+        private void mServer_DataReceived(object sender, byte[] data)
+        {
+            if ((data != null) && (data.Length > 0))
+            {
+                mParser.ParsePacket(data);
+            }
+        }
+
+        private void mServer_Error(object sender, String message)
+        {
+            if (message.Length > 0)
+            {
+                MessageBox.Show(message, "Server");
+            }
+        }
+
+        private void mParser_ContentReceived(object sender, byte[] content)
+        {
+            mProtocol.ParseCommand(content);
+        }
+
+        private Led.LedNumber StringToLedNumber(string ledNumberString)
+        {
+                 if (ledNumberString == "1"  ) { return Led.LedNumber.One;     }
+            else if (ledNumberString == "2"  ) { return Led.LedNumber.Two;     }
+            else if (ledNumberString == "3"  ) { return Led.LedNumber.Three;   }
+            else if (ledNumberString == "4"  ) { return Led.LedNumber.Four;    }
+            else if (ledNumberString == "All") { return Led.LedNumber.All;     }
+            else                               { return Led.LedNumber.Invalid; }
+        }
+
+        private string LedNumberToString(int ledNumber)
+        {
+                 if (ledNumber == 1) { return "1"; }
+            else if (ledNumber == 2) { return "2"; }
+            else if (ledNumber == 3) { return "3"; }
+            else if (ledNumber == 4) { return "4"; }
+            else                     { return "0"; }  // Invalid. Case 'All' not handled: special
+        }
+
+        private Led.LedNumber IntToLedNumber(int ledNumber)
+        {
+                 if (ledNumber == 0) { return Led.LedNumber.Invalid; }
+            else if (ledNumber == 1) { return Led.LedNumber.One;     }
+            else if (ledNumber == 2) { return Led.LedNumber.Two;     }
+            else if (ledNumber == 3) { return Led.LedNumber.Three;   }
+            else if (ledNumber == 4) { return Led.LedNumber.Four;    }
+            else                     { return Led.LedNumber.All;     }
+        }
+
+        private int LedNumberToInt(Led.LedNumber ledNumber)
+        {                 
+                 if (ledNumber == Led.LedNumber.One    ) { return 1; }
+            else if (ledNumber == Led.LedNumber.Two    ) { return 2; }
+            else if (ledNumber == Led.LedNumber.Three  ) { return 3; }
+            else if (ledNumber == Led.LedNumber.Four   ) { return 4; }
+            else                                         { return 0; }  // Invalid. Case 'All' not handled: special
+        }
+
+        private Led.LedColor StringToLedColor(string ledColorString)
+        {
+                 if (ledColorString == "Purple"   ) { return Led.LedColor.Purple;    }
+            else if (ledColorString == "Red"      ) { return Led.LedColor.Red;       }
+            else if (ledColorString == "Orange"   ) { return Led.LedColor.Orange;    }
+            else if (ledColorString == "Yellow"   ) { return Led.LedColor.Yellow;    }
+            else if (ledColorString == "Green"    ) { return Led.LedColor.Green;     }
+            else if (ledColorString == "LightBlue") { return Led.LedColor.LightBlue; }
+            else if (ledColorString == "Blue"     ) { return Led.LedColor.Blue;      }
+            else if (ledColorString == "White"    ) { return Led.LedColor.White;     }
+            else                                    { return Led.LedColor.Off;       }
+        }
+
+        #endregion
+
+
+        #region Protocol Handling
+
+        private void mProtocol_VersionResponse(object sender, string version)
+        {
+            AddLstBoxItems(version);
+        }
+
+        private void mProtocol_LedAmountResponse(object sender, int number_of_leds)
+        {
+            mNumberOfLeds = IntToLedNumber(number_of_leds);
+
+            // Fill combobox with available options
+            if (number_of_leds > 0)
+            {
+                ClearCbxLedIdItems();
+                AddCbxLedIdItem("All");
+                for (var i = 1; i <= number_of_leds; i++)
+                {
+                    AddCbxLedIdItem(LedNumberToString(i));
                 }
             }
 
-            workerSocketDict.Clear();
+            AddLstBoxItems("Number of leds: " + number_of_leds);
+        }
 
-            clientIndex = 0;
-            UpdateLBLNrClientsConnected(System.Convert.ToString(workerSocketDict.Count));
+        private void mProtocol_LedGetResponse(object sender, string led_content)
+        {
+            AddLstBoxItems(led_content);
+        }
 
-            if (listenerSocket != null)
+        private void PackageAndSendToClients(byte[] content)
+        {
+            byte[] packet = mParser.CreatePacket(content);
+
+            foreach (var clientId in mClientList)
             {
-                listenerSocket.Close();
-                listenerSocket = null;
+                mServer.Send(clientId, packet);
             }
         }
 

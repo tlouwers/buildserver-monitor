@@ -1,5 +1,14 @@
 *.suo
 
+/BuildserverNetwork/bin/*
+/BuildserverNetwork/obj/*
+
+/BuildserverPacketParser/bin/*
+/BuildserverPacketParser/obj/*
+
+/LedBulb/bin/*
+/LedBulb/obj/*
+
 /Client/bin/*
 /Client/obj/*
 
