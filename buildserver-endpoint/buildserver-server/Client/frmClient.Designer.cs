@@ -41,6 +41,8 @@
             this.ledBulb2 = new Bulb.LedBulb();
             this.ledBulb3 = new Bulb.LedBulb();
             this.ledBulb4 = new Bulb.LedBulb();
+            this.cbxBuzzer = new MetroFramework.Controls.MetroCheckBox();
+            this.cbxVibration = new MetroFramework.Controls.MetroCheckBox();
             this.SuspendLayout();
             // 
             // tbxPort
@@ -246,11 +248,35 @@
             this.ledBulb4.TabIndex = 16;
             this.ledBulb4.Text = "ledBulb4";
             // 
+            // cbxBuzzer
+            // 
+            this.cbxBuzzer.AutoSize = true;
+            this.cbxBuzzer.Enabled = false;
+            this.cbxBuzzer.Location = new System.Drawing.Point(812, 246);
+            this.cbxBuzzer.Name = "cbxBuzzer";
+            this.cbxBuzzer.Size = new System.Drawing.Size(68, 17);
+            this.cbxBuzzer.TabIndex = 17;
+            this.cbxBuzzer.Text = "Buzzing";
+            this.cbxBuzzer.UseSelectable = true;
+            // 
+            // cbxVibration
+            // 
+            this.cbxVibration.AutoSize = true;
+            this.cbxVibration.Enabled = false;
+            this.cbxVibration.Location = new System.Drawing.Point(812, 269);
+            this.cbxVibration.Name = "cbxVibration";
+            this.cbxVibration.Size = new System.Drawing.Size(77, 17);
+            this.cbxVibration.TabIndex = 18;
+            this.cbxVibration.Text = "Vibrating";
+            this.cbxVibration.UseSelectable = true;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1067, 738);
+            this.Controls.Add(this.cbxVibration);
+            this.Controls.Add(this.cbxBuzzer);
             this.Controls.Add(this.ledBulb4);
             this.Controls.Add(this.ledBulb3);
             this.Controls.Add(this.ledBulb2);
@@ -290,7 +316,8 @@
         private Bulb.LedBulb ledBulb2;
         private Bulb.LedBulb ledBulb3;
         private Bulb.LedBulb ledBulb4;
-
+        private MetroFramework.Controls.MetroCheckBox cbxBuzzer;
+        private MetroFramework.Controls.MetroCheckBox cbxVibration;
     }
 }
 

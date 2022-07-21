@@ -1,8 +1,6 @@
 ﻿using MetroFramework.Forms;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Net.Sockets;
 using System.Windows.Forms;
 
 
@@ -12,7 +10,7 @@ namespace BuildserverMonitor
     {
         #region Fields
 
-        private List<Int32> mClientList = new List<Int32>();
+        private List<int> mClientList = new List<int>();
         private Server mServer = new Server();
         private bool mConnected = false;
 
@@ -41,8 +39,10 @@ namespace BuildserverMonitor
             mProtocol.VersionResponse += mProtocol_VersionResponse;
             mProtocol.LedAmountResponse += mProtocol_LedAmountResponse;
             mProtocol.LedGetResponse += mProtocol_LedGetResponse;
+            mProtocol.BuzzerGetResponse += mProtocol_BuzzerGetResponse;
+            mProtocol.VibrationGetResponse += mProtocol_VibrationGetResponse;
 
-            cbxLedColor.SelectedIndex = 0;  // Off
+            cbxLedsColor.SelectedIndex = 0;  // Off
         }
 
         private void frmMain_Load(object sender, EventArgs e)
@@ -65,7 +65,7 @@ namespace BuildserverMonitor
                     return;
                 }
 
-                UInt16 port = Convert.ToUInt16(tbxPort.Text);
+                ushort port = Convert.ToUInt16(tbxPort.Text);
 
                 mServer.Start("localhost", port);
             }
@@ -125,25 +125,25 @@ namespace BuildserverMonitor
 
         private void AddCbxLedIdItem(string item)
         {
-            if (cbxLedId.InvokeRequired)
+            if (cbxLedsId.InvokeRequired)
             {
-                cbxLedId.Invoke(new Action(() => cbxLedId.Items.Add(item)));
+                cbxLedsId.Invoke(new Action(() => cbxLedsId.Items.Add(item)));
             }
             else
             {
-                cbxLedId.Items.Add(item);
+                cbxLedsId.Items.Add(item);
             }
         }
 
         private void ClearCbxLedIdItems()
         {
-            if (cbxLedId.InvokeRequired)
+            if (cbxLedsId.InvokeRequired)
             {
-                cbxLedId.Invoke(new Action(() => cbxLedId.Items.Clear()));
+                cbxLedsId.Invoke(new Action(() => cbxLedsId.Items.Clear()));
             }
             else
             {
-                cbxLedId.Items.Clear();
+                cbxLedsId.Items.Clear();
             }
         }
 
@@ -157,7 +157,7 @@ namespace BuildserverMonitor
             byte[] content = new byte[2];
 
             content[0] = (byte)ProtocolHandler.Command.Version;
-            content[1] = (byte)ProtocolHandler.Version.Get;
+            content[1] = (byte)ProtocolHandler.VersionCmd.Get;
 
             PackageAndSendToClients(content);
         }
@@ -167,7 +167,7 @@ namespace BuildserverMonitor
             byte[] content = new byte[2];
 
             content[0] = (byte)ProtocolHandler.Command.Leds;
-            content[1] = (byte)ProtocolHandler.Leds.GetAmount;
+            content[1] = (byte)ProtocolHandler.LedCmd.GetAmount;
 
             PackageAndSendToClients(content);
         }
@@ -180,7 +180,7 @@ namespace BuildserverMonitor
             }
             else
             {
-                if (cbxLedId.SelectedItem == null)
+                if (cbxLedsId.SelectedItem == null)
                 {
                     MessageBox.Show("Select a led Id to get first!", "Server");
                 }
@@ -189,8 +189,8 @@ namespace BuildserverMonitor
                     byte[] content = new byte[3];
 
                     content[0] = (byte)ProtocolHandler.Command.Leds;
-                    content[1] = (byte)ProtocolHandler.Leds.Get;
-                    content[2] = (byte)StringToLedNumber(cbxLedId.SelectedItem.ToString());
+                    content[1] = (byte)ProtocolHandler.LedCmd.Get;
+                    content[2] = (byte)StringToLedNumber(cbxLedsId.SelectedItem.ToString());
 
                     PackageAndSendToClients(content);
                 }
@@ -205,50 +205,124 @@ namespace BuildserverMonitor
             }
             else
             {
-                Led.LedNumber ledNumber = StringToLedNumber(cbxLedId.SelectedItem.ToString());
-
-                byte[] content = null;
-
-                if (ledNumber != Led.LedNumber.All && ledNumber != Led.LedNumber.Invalid)
+                if (!AreAllLedFieldsFilled())
                 {
-                    content = new byte[2 + Led.Length];
-
-                    Led led = new Led();
-                    led.Id = ledNumber;
-                    led.Color = StringToLedColor(cbxLedColor.SelectedItem.ToString());
-
-                    byte[] ledArr = led.ToArray();
-
-                    content[0] = (byte)ProtocolHandler.Command.Leds;
-                    content[1] = (byte)ProtocolHandler.Leds.Set;
-                    ledArr.CopyTo(content, 2);
+                    MessageBox.Show("Not all fields for Leds are filled properly!", "Server");
                 }
-                else if (ledNumber == Led.LedNumber.All)
+                else
                 {
-                    int numberOfLeds = LedNumberToInt(mNumberOfLeds);
+                    Led.LedNumber ledNumber = StringToLedNumber(cbxLedsId.SelectedItem.ToString());
 
-                    content = new byte[2 + (numberOfLeds * Led.Length)];
+                    byte[] content = null;
 
-                    content[0] = (byte)ProtocolHandler.Command.Leds;
-                    content[1] = (byte)ProtocolHandler.Leds.Set;
-
-                    for (var i = 1; i <= numberOfLeds; i++)
+                    if (ledNumber != Led.LedNumber.All && ledNumber != Led.LedNumber.Invalid)
                     {
+                        content = new byte[2 + Led.Length];
+
                         Led led = new Led();
-                        led.Id = IntToLedNumber(i);
-                        led.Color = StringToLedColor(cbxLedColor.SelectedItem.ToString());
+                        led.Id = ledNumber;
+                        led.Color = StringToLedColor(cbxLedsColor.SelectedItem.ToString());
+                        led.Brightness = StringToByte(tbxLedsBrightness.Text);
+                        led.TimeOn = StringToUint16(tbxLedsTimeOn.Text);
+                        led.TimeTotal = StringToUint16(tbxLedsTimeTotal.Text);
+                        led.NrOfRepeats = StringToUint16(tbxLedsNrOfRepeats.Text);
 
                         byte[] ledArr = led.ToArray();
 
-                        ledArr.CopyTo(content, 2 + ((i - 1) * 9));
+                        content[0] = (byte)ProtocolHandler.Command.Leds;
+                        content[1] = (byte)ProtocolHandler.LedCmd.Set;
+                        ledArr.CopyTo(content, 2);
                     }
+                    else if (ledNumber == Led.LedNumber.All)
+                    {
+                        int numberOfLeds = LedNumberToInt(mNumberOfLeds);
+
+                        content = new byte[2 + (numberOfLeds * Led.Length)];
+
+                        content[0] = (byte)ProtocolHandler.Command.Leds;
+                        content[1] = (byte)ProtocolHandler.LedCmd.Set;
+
+                        for (var i = 1; i <= numberOfLeds; i++)
+                        {
+                            Led led = new Led();
+                            led.Id = IntToLedNumber(i);
+                            led.Color = StringToLedColor(cbxLedsColor.SelectedItem.ToString());
+                            led.Brightness = StringToByte(tbxLedsBrightness.Text);
+                            led.TimeOn = StringToUint16(tbxLedsTimeOn.Text);
+                            led.TimeTotal = StringToUint16(tbxLedsTimeTotal.Text);
+                            led.NrOfRepeats = StringToUint16(tbxLedsNrOfRepeats.Text);
+
+                            byte[] ledArr = led.ToArray();
+
+                            ledArr.CopyTo(content, 2 + ((i - 1) * 9));
+                        }
+                    }
+
+                    if (content != null)
+                    {
+                        PackageAndSendToClients(content);
+                    }
+
+                    // Clear textboxes to prevent confusion
+                    tbxLedsBrightness.Text = string.Empty;
+                    tbxLedsTimeOn.Text = string.Empty;
+                    tbxLedsTimeTotal.Text = string.Empty;
+                    tbxLedsNrOfRepeats.Text = string.Empty;
                 }
+            }
+        }
+
+        private void btnBuzzerGet_Click(object sender, EventArgs e)
+        {
+            byte[] content = new byte[2];
+
+            content[0] = (byte)ProtocolHandler.Command.Buzzer;
+            content[1] = (byte)ProtocolHandler.BuzzerCmd.Get;
+
+            PackageAndSendToClients(content);
+        }
+
+        private void btnBuzzerSet_Click(object sender, EventArgs e)
+        {
+            if (!AreAllBuzzerFieldsFilled())
+            {
+                MessageBox.Show("Not all fields for Buzzer are filled properly!", "Server");
+            }
+            else
+            {
+                byte[] content = new byte[2 + Buzzer.Length];
+
+                Buzzer buzzer = new Buzzer();
+                buzzer.TimeOn = StringToUint16(tbxBuzzerTimeOn.Text);
+                buzzer.TimeTotal = StringToUint16(tbxBuzzerTimeTotal.Text);
+                buzzer.NrOfRepeats = StringToUint16(tbxBuzzerNrOfRepeats.Text);
+
+                byte[] buzzerArr = buzzer.ToArray();
+
+                content[0] = (byte)ProtocolHandler.Command.Buzzer;
+                content[1] = (byte)ProtocolHandler.BuzzerCmd.Set;
+                buzzerArr.CopyTo(content, 2);
 
                 if (content != null)
                 {
                     PackageAndSendToClients(content);
                 }
+
+                // Clear textboxes to prevent confusion
+                tbxBuzzerTimeOn.Text = string.Empty;
+                tbxBuzzerTimeTotal.Text = string.Empty;
+                tbxBuzzerNrOfRepeats.Text = string.Empty;
             }
+        }
+
+        private void btnVibrationGet_Click(object sender, EventArgs e)
+        {
+#warning ToDo - vibration button handling
+        }
+
+        private void btnVibrationSet_Click(object sender, EventArgs e)
+        {
+#warning ToDo - vibration button handling
         }
 
         #endregion
@@ -260,10 +334,11 @@ namespace BuildserverMonitor
         {
             mClientList.Add(clientId);
 
-            SetLblNumberOfConnectedClientsValueText(System.Convert.ToString(mServer.NumberOfClientsConnected));
+            SetLblNumberOfConnectedClientsValueText(Convert.ToString(mServer.NumberOfClientsConnected));
 
             string msg = "Client " + clientId + " connected.";
-            MessageBox.Show(msg, "Server");
+#warning Disabled popup which client connected
+            //MessageBox.Show(msg, "Server");
         }
 
         private void mServer_ClientDisconnected(object sender, int clientId)
@@ -273,7 +348,8 @@ namespace BuildserverMonitor
             SetLblNumberOfConnectedClientsValueText(System.Convert.ToString(mServer.NumberOfClientsConnected));
             
             string msg = "Client " + clientId + " disconnected.";
-            MessageBox.Show(msg, "Server");
+#warning Disabled popup which client disconnected
+            //MessageBox.Show(msg, "Server");
         }
 
         private void mServer_Listening(object sender)
@@ -302,7 +378,7 @@ namespace BuildserverMonitor
             }
         }
 
-        private void mServer_Error(object sender, String message)
+        private void mServer_Error(object sender, string message)
         {
             if (message.Length > 0)
             {
@@ -366,6 +442,129 @@ namespace BuildserverMonitor
             else                                    { return Led.LedColor.Off;       }
         }
 
+        private ushort StringToUint16(string time_or_repeats)
+        {
+            ushort result = 0;
+            try
+            {
+                result = Convert.ToUInt16(time_or_repeats);
+            }
+            catch (Exception)
+            {
+                // Silently fail: returns 0
+            }
+            return result;
+        }
+
+        private byte StringToByte(string brightness)
+        {
+            byte result = 0;
+            try
+            {
+                result = Convert.ToByte(brightness);
+            }
+            catch (Exception)
+            {
+                // Silently fail: returns 0
+            }
+            return result;
+        }
+
+        private bool IsFilledAndAUint16Number(string time_or_repeats)
+        {
+            bool result = false;
+
+            if ((time_or_repeats != null) && (time_or_repeats.Length > 0))
+            {
+                try
+                {
+                    Convert.ToUInt16(time_or_repeats);
+                    result = true;
+                }
+                catch (Exception)
+                {
+                    // Silently fail: returns 0
+                }
+            }
+
+            return result;
+        }
+
+        private bool IsFilledAndAByteNumber(string brightness)
+        {
+            bool result = false;
+
+            if ((brightness != null) && (brightness.Length > 0))
+            {
+                try
+                {
+                    Convert.ToByte(brightness);
+                    result = true;
+                }
+                catch (Exception)
+                {
+                    // Silently fail: returns 0
+                }
+            }
+
+            return result;
+        }
+
+        private bool AreAllLedFieldsFilled()
+        {
+            if ((mNumberOfLeds == Led.LedNumber.Invalid) || (cbxLedsId.Text == null) || (cbxLedsId.Text.Length == 0))
+            {
+                return false;
+            }
+
+            if ((cbxLedsColor.Text == null) || (cbxLedsColor.Text.Length == 0))
+            {
+                return false;
+            }
+
+            if (!IsFilledAndAByteNumber(tbxLedsBrightness.Text))
+            {
+                return false;
+            }
+
+            if (!IsFilledAndAUint16Number(tbxLedsTimeOn.Text))
+                {
+                return false;
+            }
+
+            if (!IsFilledAndAUint16Number(tbxLedsTimeTotal.Text))
+            {
+                return false;
+            }
+
+            if (!IsFilledAndAUint16Number(tbxLedsNrOfRepeats.Text))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool AreAllBuzzerFieldsFilled()
+        {
+            if (!IsFilledAndAUint16Number(tbxBuzzerTimeOn.Text))
+            {
+                return false;
+            }
+
+            if (!IsFilledAndAUint16Number(tbxBuzzerTimeTotal.Text))
+            {
+                return false;
+            }
+
+            if (!IsFilledAndAUint16Number(tbxBuzzerNrOfRepeats.Text))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         #endregion
 
 
@@ -396,7 +595,17 @@ namespace BuildserverMonitor
 
         private void mProtocol_LedGetResponse(object sender, string led_content)
         {
-            AddLstBoxItems(led_content);
+            AddLstBoxItems("Led (get): " + led_content);
+        }
+
+        private void mProtocol_BuzzerGetResponse(object sender, string buzzer_content)
+        {
+            AddLstBoxItems("Buzzer (get): " + buzzer_content);
+        }
+
+        private void mProtocol_VibrationGetResponse(object sender, string vibration_content)
+        {
+            AddLstBoxItems("Vibration (get): " + vibration_content);
         }
 
         private void PackageAndSendToClients(byte[] content)

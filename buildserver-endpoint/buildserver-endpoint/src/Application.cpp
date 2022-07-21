@@ -20,6 +20,7 @@
 #include <Arduino.h>
 #include "connection_config.h"
 #include "Application.hpp"
+#include "utility/Timings.hpp"
 
 
 /************************************************************************/
@@ -45,6 +46,7 @@ Application::Application() :
     mData(mLogger),
     mLeds(mLogger),
     mPacketParser(mLogger),
+    mProtocol(mLogger),
     mTimer(mLogger),
     mVibration(mLogger),
     mWifi(mLogger)
@@ -60,15 +62,16 @@ bool Application::Init()
 {
     bool result = true;
 
-    mLogger.Log(LogLevel::INFO, versionString);
+    mLogger.Log(LogLevel::INFO, VERSION_STRING);
 
     result &= mBuzzer.Init(Buzzer::Config(PIN_BUZZER));
     result &= mVibration.Init(Vibration::Config(PIN_VIBRATION));
     result &= mLeds.Init();
-    result &= mTimer.Init(Timer::Config(50));
+    result &= mTimer.Init(Timer::Config(FIFTY_MILLISECONDS));
 
 #warning ToDo: handler for wifi received complete packet? Parse chunk?
     mData.SetHandler( [this](const uint8_t* data, uint16_t length) { mPacketParser.StoreData(data, length); } );
+    mPacketParser.SetHandler( [this](const uint8_t* data, uint16_t length) { mProtocol.ParseCommand(data, length); } );
 
     result &= TryConnect();
 

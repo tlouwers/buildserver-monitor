@@ -7,8 +7,8 @@
     <ProjectGuid>{3325CCFF-FFDD-4287-AF06-1832A78F704B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BuildserverPacketParser</RootNamespace>
-    <AssemblyName>BuildserverPacketParser</AssemblyName>
+    <RootNamespace>BuildserverMonitor</RootNamespace>
+    <AssemblyName>PacketParser</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

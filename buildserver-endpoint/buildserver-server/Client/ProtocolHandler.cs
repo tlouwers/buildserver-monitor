@@ -10,6 +10,10 @@ namespace BuildserverMonitor
     public delegate void LedAmountResponseHandler(object sender, int number_of_leds);
     public delegate void LedGetResponseHandler(object sender, string led_content);
     public delegate void LedSetResponseHandler(object sender, string led_content);
+    public delegate void BuzzerGetResponseHandler(object sender, string buzzer_content);
+    public delegate void BuzzerSetResponseHandler(object sender, string buzzer_content);
+    public delegate void VibrationGetResponseHandler(object sender, string vibration_content);
+    public delegate void VibrationSetResponseHandler(object sender, string vibration_content);
 
     // For UI purpose only
     public delegate void LedColorHandlerUI(object sender, Led.LedNumber number, Led.LedColor color);
@@ -26,15 +30,27 @@ namespace BuildserverMonitor
             Battery
         };
 
-        enum Version : byte
+        enum VersionCmd : byte
         {
             Get = 1
         };
 
-        enum Leds : byte
+        enum LedCmd : byte
         {
             GetAmount = 1,
             Get,
+            Set
+        };
+
+        enum BuzzerCmd : byte
+        {
+            Get = 1,
+            Set
+        };
+
+        enum VibrationCmd : byte
+        {
+            Get = 1,
             Set
         };
 
@@ -48,6 +64,10 @@ namespace BuildserverMonitor
         public event LedAmountResponseHandler LedAmountResponse;
         public event LedGetResponseHandler LedGetResponse;
         public event LedSetResponseHandler LedSetResponse;
+        public event BuzzerGetResponseHandler BuzzerGetResponse;
+        public event BuzzerSetResponseHandler BuzzerSetResponse;
+        public event VibrationGetResponseHandler VibrationGetResponse;
+        public event VibrationSetResponseHandler VibrationSetResponse;
 
         // For UI purpose only
         public event LedColorHandlerUI LedColor;
@@ -57,7 +77,7 @@ namespace BuildserverMonitor
 
         #region Constants
 
-        private string VERSION_STRING = "Buildserver Client v0.2";
+        private readonly string VERSION_STRING = "Buildserver Client v0.2";
 
         private const byte COMMAND_LENGTH = 1;    // Used as: length
         private const byte ACTION_LENGTH  = 1;    // Used as: length
@@ -71,6 +91,8 @@ namespace BuildserverMonitor
         #region Fields
 
         private LedStrand mLedStrand = new LedStrand();
+        private Buzzer mBuzzer = new Buzzer();
+        private Vibration mVibration = new Vibration();
 
         #endregion
 
@@ -88,8 +110,10 @@ namespace BuildserverMonitor
             {
                 byte command = data[COMMAND_BYTE];
 
-                     if (command == (byte)Command.Version) { HandleVersion(data); }
-                else if (command == (byte)Command.Leds   ) { HandleLeds(data);    }
+                     if (command == (byte)Command.Version  ) { HandleVersion(data);   }
+                else if (command == (byte)Command.Leds     ) { HandleLeds(data);      }
+                else if (command == (byte)Command.Buzzer   ) { HandleBuzzer(data);    }
+                else if (command == (byte)Command.Vibration) { HandleVibration(data); }
             }            
         }
 
@@ -104,13 +128,13 @@ namespace BuildserverMonitor
             {
                 byte action = data[ACTION_BYTE];
 
-                if (action == (byte)(Version.Get))
+                if (action == (byte)(VersionCmd.Get))
                 {
                     byte[] versionAsArray = Encoding.ASCII.GetBytes(VERSION_STRING);
 
                     byte[] content = new byte[versionAsArray.Length + COMMAND_LENGTH + ACTION_LENGTH];
                     content[COMMAND_BYTE] = (byte)(Command.Version);
-                    content[ACTION_BYTE] = (byte)(Version.Get);
+                    content[ACTION_BYTE] = (byte)(VersionCmd.Get);
                     versionAsArray.CopyTo(content, CONTENT_BYTE);
 
                     if (Response != null)
@@ -134,11 +158,11 @@ namespace BuildserverMonitor
 
                 #region Leds.GetAmount
 
-                if (action == (byte)(Leds.GetAmount))
+                if (action == (byte)(LedCmd.GetAmount))
                 {
                     byte[] content = new byte[1 + COMMAND_LENGTH + ACTION_LENGTH];
                     content[COMMAND_BYTE] = (byte)(Command.Leds);
-                    content[ACTION_BYTE] = (byte)(Leds.GetAmount);
+                    content[ACTION_BYTE] = (byte)(LedCmd.GetAmount);
                     content[CONTENT_BYTE] = (byte)LedStrand.NumberOfLeds;
 
                     if (Response != null)
@@ -156,7 +180,7 @@ namespace BuildserverMonitor
 
                 #region Leds.Get
 
-                else if (action == (byte)(Leds.Get))
+                else if (action == (byte)(LedCmd.Get))
                 {
                     byte ledId = data[CONTENT_BYTE];
                     byte[] led_content = new byte[0];
@@ -193,8 +217,8 @@ namespace BuildserverMonitor
 
                     byte[] content = new byte[led_content.Length + COMMAND_LENGTH + ACTION_LENGTH];
                     content[COMMAND_BYTE] = (byte)(Command.Leds);
-                    content[ACTION_BYTE] = (byte)(Leds.Get);
-                    led_content.CopyTo(content, (CONTENT_BYTE));
+                    content[ACTION_BYTE] = (byte)(LedCmd.Get);
+                    led_content.CopyTo(content, CONTENT_BYTE);
 
                     if (Response != null)
                     {
@@ -211,7 +235,7 @@ namespace BuildserverMonitor
 
                 #region Leds.Set
 
-                else if (action == (byte)(Leds.Set))
+                else if (action == (byte)(LedCmd.Set))
                 {
                     byte ledId = data[CONTENT_BYTE];
                     byte length = (byte)(data.Length - COMMAND_LENGTH - ACTION_LENGTH);
@@ -261,6 +285,117 @@ namespace BuildserverMonitor
             }
         }
 
+        private void HandleBuzzer(byte[] data)
+        {
+            if (data.Length > COMMAND_LENGTH)
+            {
+                byte action = data[ACTION_BYTE];
+
+                #region Buzzer.Get
+
+                if (action == (byte)(BuzzerCmd.Get))
+                {
+                    byte[] buzzer_content = mBuzzer.ToArray();
+
+                    byte[] content = new byte[buzzer_content.Length + COMMAND_LENGTH + ACTION_LENGTH];
+                    content[COMMAND_BYTE] = (byte)(Command.Buzzer);
+                    content[ACTION_BYTE] = (byte)(BuzzerCmd.Get);
+                    buzzer_content.CopyTo(content, CONTENT_BYTE);
+
+                    if (Response != null)
+                    {
+                        Response(this, content);
+                    }
+
+                    if (BuzzerGetResponse != null)
+                    {
+                        BuzzerGetResponse(this, mBuzzer.ToString());
+                    }
+                }
+
+                #endregion
+                #region Buzzer.Set
+
+                else if (action == (byte)(BuzzerCmd.Set))
+                {
+                    byte length = (byte)(data.Length - COMMAND_LENGTH - ACTION_LENGTH);
+                    byte[] buzzer_content = new byte[Buzzer.Length];
+
+                    if (length == Buzzer.Length)
+                    {
+                        Array.Copy(data, CONTENT_BYTE, buzzer_content, 0, buzzer_content.Length);
+                        Buzzer newBuzzer = Buzzer.FromArray(buzzer_content);
+                        if (newBuzzer != null)
+                        {
+                            mBuzzer.DeepCopy(newBuzzer);
+
+                            if (BuzzerSetResponse != null)
+                            {
+                                BuzzerSetResponse(this, mBuzzer.ToString());
+                            }
+                        }
+                    }
+                }
+
+                #endregion
+            }
+        }
+
+        private void HandleVibration(byte[] data)
+        {
+            if (data.Length > COMMAND_LENGTH)
+            {
+                byte action = data[ACTION_BYTE];
+
+                #region Vibration.Get
+
+                if (action == (byte)(VibrationCmd.Get))
+                {
+                    byte[] vibration_content = mVibration.ToArray();
+
+                    byte[] content = new byte[vibration_content.Length + COMMAND_LENGTH + ACTION_LENGTH];
+                    content[COMMAND_BYTE] = (byte)(Command.Vibration);
+                    content[ACTION_BYTE] = (byte)(VibrationCmd.Get);
+                    vibration_content.CopyTo(content, CONTENT_BYTE);
+
+                    if (Response != null)
+                    {
+                        Response(this, content);
+                    }
+
+                    if (VibrationGetResponse != null)
+                    {
+                        VibrationGetResponse(this, mBuzzer.ToString());
+                    }
+                }
+
+                #endregion
+                #region Vibration.Set
+
+                else if (action == (byte)(VibrationCmd.Set))
+                {
+                    byte length = (byte)(data.Length - COMMAND_LENGTH - ACTION_LENGTH);
+                    byte[] vibration_content = new byte[Vibration.Length];
+
+                    if (length == Vibration.Length)
+                    {
+                        Array.Copy(data, CONTENT_BYTE, vibration_content, 0, vibration_content.Length);
+                        Vibration newVibration = Vibration.FromArray(vibration_content);
+                        if (newVibration != null)
+                        {
+                            mVibration.DeepCopy(newVibration);
+
+                            if (VibrationSetResponse != null)
+                            {
+                                VibrationSetResponse(this, mVibration.ToString());
+                            }
+                        }
+                    }
+                }
+
+                #endregion
+            }
+        }
 
         #region LedStrand Events
 

@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("BuildserverNetwork")]
+[assembly: AssemblyTitle("Network")]
 [assembly: AssemblyDescription("TCP Client/Server library based upon sockets.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]

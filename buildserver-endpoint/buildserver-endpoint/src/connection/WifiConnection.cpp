@@ -67,9 +67,7 @@ bool WifiConnection::Connect(uint32_t timeout_ms)
 {
     if (mConnected)
     {
-        std::string ipString( WiFi.localIP().toString().c_str() );
-        std::string message = "Connected with IP: [" + ipString + "]";
-        mLogger.Log(LogLevel::INFO, message.c_str());
+        LogNetworkString();
         return true;
     }
 
@@ -79,24 +77,31 @@ bool WifiConnection::Connect(uint32_t timeout_ms)
         mLogger.Log(LogLevel::INFO, "Restricting maximum WiFi timeout to configured value");
     }
 
+    WiFi.mode(WIFI_STA);
+    wifi_set_sleep_type(LIGHT_SLEEP_T);
+
     bool result = false;
     if (CheckValidSSIDAndPassword(WIFI_SSID, WIFI_PASSWORD))    // Note: these values are taken from the 'connection_config.h' file.
     {
-        for (uint8_t i = 0; i < WIFI_NUMBER_OF_RETRIES; i++)
+        for (uint8_t i = 0; i <= WIFI_NUMBER_OF_RETRIES; i++)
         {
             if (ConnectionAttempt(timeout_ms))
             {
-                std::string ipString( WiFi.localIP().toString().c_str() );
-                std::string message = "Connected with IP: [" + ipString + "]";
-                mLogger.Log(LogLevel::INFO, message.c_str());
+                LogNetworkString();
                 mConnected = true;
                 result = true;
                 break;
             }
             else
             {
-                mLogger.Log(LogLevel::INFO, "Attempt failed, retry...");
-                delay(TIMEOUT_INCREMENT);
+                if (i < DATA_NUMBER_OF_RETRIES) {
+                    mLogger.Log(LogLevel::INFO, "Attempt failed, retry...");
+                    delay(TIMEOUT_INCREMENT);
+                }
+                else
+                {
+                    mLogger.Log(LogLevel::INFO, "Attempt failed");
+                }
             }
         }
     }
@@ -174,24 +179,31 @@ bool WifiConnection::CheckValidSSIDAndPassword(const char* ssid, const char* pas
  */
 bool WifiConnection::ConnectionAttempt(uint32_t timeout_ms)
 {
-    WiFi.mode(WIFI_STA);
-    wifi_set_sleep_type(LIGHT_SLEEP_T);
+    mLogger.Log(LogLevel::INFO, "Connecting to WiFi network...");
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
-    if (!WiFi.isConnected())
+    unsigned long timeout = millis();
+    while (WiFi.status() != WL_CONNECTED)
     {
-        WiFi.reconnect();
-        WiFi.waitForConnectResult(timeout_ms);
+        if ((millis() - timeout) > timeout_ms) {
+            WiFi.disconnect();
+            break;
+        }
+        else
+        {
+            delay(500);
+        }
     }
 
-    // Check status: on failure cleanup first
-    if (WiFi.isConnected())
-    {
-        return true;    // Happy case...
-    }
-    else
-    {
-        WiFi.disconnect();
-        return false;
-    }
+    return WiFi.isConnected();
+}
+
+/**
+ * \brief   Print the connected to Wifi string to logging.
+ */
+void WifiConnection::LogNetworkString()
+{
+    std::string ipString( WiFi.localIP().toString().c_str() );
+    std::string message = "Connected with IP: [" + ipString + "]";
+    mLogger.Log(LogLevel::INFO, message.c_str());
 }

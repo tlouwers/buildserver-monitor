@@ -56,7 +56,6 @@ private:
     uint8_t    mBuffer[DATA_CONNECTION_BUFFER_SIZE] = {};
     std::function<void(const uint8_t*, uint16_t)> mHandler;
 
-
     bool CheckValidHostAddressAndPort(const char* host_address, const char* host_port);
     bool ConnectionAttempt();
     void LogServerString();

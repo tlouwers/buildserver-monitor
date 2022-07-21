@@ -17,7 +17,6 @@
 #ifndef TIMINGS_HPP_
 #define TIMINGS_HPP_
 
-
 /************************************************************************/
 /* Includes                                                             */
 /************************************************************************/
@@ -29,6 +28,9 @@
 /* Configurable options                                                 */
 /************************************************************************/
 // Timeouts - in milliseconds
+static constexpr unsigned FIFTY_MILLISECONDS    =  50;
+static constexpr unsigned HUNDRED_MILLISECONDS  = 100;
+
 static constexpr unsigned QUARTER_SECOND =    250;
 static constexpr unsigned HALF_SECOND    =    500;
 static constexpr unsigned ONE_SECOND     =   1000;

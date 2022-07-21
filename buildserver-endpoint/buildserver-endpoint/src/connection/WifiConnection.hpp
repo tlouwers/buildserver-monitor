@@ -52,6 +52,7 @@ private:
 
     bool CheckValidSSIDAndPassword(const char* ssid, const char* password);
     bool ConnectionAttempt(uint32_t timeout_ms);
+    void LogNetworkString();
 };
 
 

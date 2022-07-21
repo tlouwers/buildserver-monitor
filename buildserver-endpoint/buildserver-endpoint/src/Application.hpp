@@ -34,6 +34,7 @@
     #include "drivers/FakeLeds.hpp"
 #endif
 #include "connection/PacketParser.hpp"
+#include "connection/ProtocolHandler.hpp"
 #include "drivers/Timer.hpp"
 #include "drivers/Vibration.hpp"
 #if (WIFI == REAL)
@@ -42,7 +43,6 @@
     #include "connection/FakeWifiConnection.hpp"
 #endif
 #include "utility/Logging.hpp"
-#include "utility/Timings.hpp"
 
 
 /************************************************************************/
@@ -76,6 +76,7 @@ private:
     FakeLeds           mLeds;
 #endif
     PacketParser       mPacketParser;
+    ProtocolHandler    mProtocol;
     Timer              mTimer;
     Vibration          mVibration;
 #if (WIFI == REAL)

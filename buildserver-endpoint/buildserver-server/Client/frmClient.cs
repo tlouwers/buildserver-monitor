@@ -1,7 +1,5 @@
 ﻿using MetroFramework.Forms;
 using System;
-using System.ComponentModel;
-using System.Threading;
 using System.Windows.Forms;
 
 
@@ -39,6 +37,10 @@ namespace BuildserverMonitor
             mProtocol.LedAmountResponse += mProtocol_LedAmountResponse;
             mProtocol.LedGetResponse += mProtocol_LedGetResponse;
             mProtocol.LedSetResponse += mProtocol_LedSetResponse;
+            mProtocol.BuzzerGetResponse += mProtocol_BuzzerGetResponse;
+            mProtocol.BuzzerSetResponse += mProtocol_BuzzerSetResponse;
+            mProtocol.VibrationGetResponse += mProtocol_VibrationGetResponse;
+            mProtocol.VibrationSetResponse += mProtocol_VibrationSetResponse;
 
             // Led UI events
             mProtocol.LedColor += mProtocol_LedColor;
@@ -49,7 +51,7 @@ namespace BuildserverMonitor
             mClient.Disconnect();
         }
         
-        private void btnConnection_Click(object sender, System.EventArgs e)
+        private void btnConnection_Click(object sender, EventArgs e)
         {
             if (!mConnected)
             {
@@ -153,7 +155,8 @@ namespace BuildserverMonitor
             mConnected = true;
 
             string msg = "Connected to server: " + server_ip;
-            MessageBox.Show(msg, "Client");
+#warning Disabled popup connected to server
+            //MessageBox.Show(msg, "Client");
         }
 
         private void client_Disconnected(object sender)
@@ -212,6 +215,26 @@ namespace BuildserverMonitor
         private void mProtocol_LedSetResponse(object sender, string led_content)
         {
             AddLstBoxItems("Led (set): " + led_content);
+        }
+
+        private void mProtocol_BuzzerGetResponse(object sender, string buzzer_content)
+        {
+            AddLstBoxItems("Buzzer (get): " + buzzer_content);
+        }
+
+        private void mProtocol_BuzzerSetResponse(object sender, string buzzer_content)
+        {
+            AddLstBoxItems("Buzzer (set): " + buzzer_content);
+        }
+
+        private void mProtocol_VibrationGetResponse(object sender, string vibration_content)
+        {
+            AddLstBoxItems("Vibration (get): " + vibration_content);
+        }
+
+        private void mProtocol_VibrationSetResponse(object sender, string vibration_content)
+        {
+            AddLstBoxItems("Vibration (set): " + vibration_content);
         }
 
         #region LedStrand Events

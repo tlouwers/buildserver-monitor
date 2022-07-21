@@ -36,6 +36,7 @@
  */
 enum class LedColor : uint8_t
 {
+    Off = 0,
     Purple,
     Red,
     Orange,
@@ -44,7 +45,6 @@ enum class LedColor : uint8_t
     LightBlue,
     Blue,
     White,
-    Off
 };
 
 

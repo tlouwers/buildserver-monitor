@@ -1,4 +1,8 @@
 *.suo
+.vs/*
+
+/BuildserverComponents/bin/*
+/BuildserverComponents/obj/*
 
 /BuildserverNetwork/bin/*
 /BuildserverNetwork/obj/*

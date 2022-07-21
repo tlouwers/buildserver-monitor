@@ -1,17 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.2017
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{DADBDAE1-5C56-4FFE-87DE-8834BB4794B4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{AC244164-0AB6-49F7-9953-D8E4C342CAD3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildserverNetwork", "BuildserverNetwork\BuildserverNetwork.csproj", "{3AF06E27-5376-4105-8927-AE5461E7CDD8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Network", "BuildserverNetwork\Network.csproj", "{3AF06E27-5376-4105-8927-AE5461E7CDD8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildserverPacketParser", "BuildserverPacketParser\BuildserverPacketParser.csproj", "{3325CCFF-FFDD-4287-AF06-1832A78F704B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PacketParser", "BuildserverPacketParser\PacketParser.csproj", "{3325CCFF-FFDD-4287-AF06-1832A78F704B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LedBulb", "LedBulb\LedBulb.csproj", "{18A6EEC3-895D-44B9-8038-F53D6AA898B2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Components", "BuildserverComponents\Components.csproj", "{46A6AE55-0861-4505-A166-BC0FE5A7EC4B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,8 +41,15 @@ Global
 		{18A6EEC3-895D-44B9-8038-F53D6AA898B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18A6EEC3-895D-44B9-8038-F53D6AA898B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{18A6EEC3-895D-44B9-8038-F53D6AA898B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46A6AE55-0861-4505-A166-BC0FE5A7EC4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46A6AE55-0861-4505-A166-BC0FE5A7EC4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46A6AE55-0861-4505-A166-BC0FE5A7EC4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46A6AE55-0861-4505-A166-BC0FE5A7EC4B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EF912F1E-8DAA-4E38-AD00-941B738ABAB1}
 	EndGlobalSection
 EndGlobal

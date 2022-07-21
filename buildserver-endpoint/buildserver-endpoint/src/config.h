@@ -35,7 +35,7 @@ extern "C" {
 /* Configurable options                                                 */
 /************************************************************************/
 // Version
-static const char versionString[] = "Buildserver Endpoint v0.2";
+static const char VERSION_STRING[] = "Buildserver Endpoint v0.2";
 
 // Available log levels
 #define LOG_LEVEL_OFF               1

@@ -60,7 +60,6 @@
     <Compile Include="frmClient.Designer.cs">
       <DependentUpon>frmClient.cs</DependentUpon>
     </Compile>
-    <Compile Include="Led.cs" />
     <Compile Include="LedStrand.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -93,13 +92,17 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BuildserverNetwork\BuildserverNetwork.csproj">
-      <Project>{3af06e27-5376-4105-8927-ae5461e7cdd8}</Project>
-      <Name>BuildserverNetwork</Name>
+    <ProjectReference Include="..\BuildserverComponents\Components.csproj">
+      <Project>{46a6ae55-0861-4505-a166-bc0fe5a7ec4b}</Project>
+      <Name>Components</Name>
     </ProjectReference>
-    <ProjectReference Include="..\BuildserverPacketParser\BuildserverPacketParser.csproj">
+    <ProjectReference Include="..\BuildserverNetwork\Network.csproj">
+      <Project>{3af06e27-5376-4105-8927-ae5461e7cdd8}</Project>
+      <Name>Network</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BuildserverPacketParser\PacketParser.csproj">
       <Project>{3325ccff-ffdd-4287-af06-1832a78f704b}</Project>
-      <Name>BuildserverPacketParser</Name>
+      <Name>PacketParser</Name>
     </ProjectReference>
     <ProjectReference Include="..\LedBulb\LedBulb.csproj">
       <Project>{18a6eec3-895d-44b9-8038-f53d6aa898b2}</Project>

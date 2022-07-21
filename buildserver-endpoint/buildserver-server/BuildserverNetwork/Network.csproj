@@ -7,8 +7,8 @@
     <ProjectGuid>{3AF06E27-5376-4105-8927-AE5461E7CDD8}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BuildserverNetwork</RootNamespace>
-    <AssemblyName>BuildserverNetwork</AssemblyName>
+    <RootNamespace>BuildserverMonitor</RootNamespace>
+    <AssemblyName>Network</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

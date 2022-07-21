@@ -77,7 +77,7 @@ bool DataConnection::Connect()
     bool result = false;
     if (CheckValidHostAddressAndPort(HOST_ADDRESS, HOST_PORT))  // Note: these values are taken from the 'connection_config.h' file.
     {
-        for (uint8_t i = 0; i < DATA_NUMBER_OF_RETRIES; i++)
+        for (uint8_t i = 0; i <= DATA_NUMBER_OF_RETRIES; i++)
         {
             if (ConnectionAttempt())
             {
@@ -88,8 +88,14 @@ bool DataConnection::Connect()
             }
             else
             {
-                mLogger.Log(LogLevel::INFO, "Attempt failed, retry...");
-                delay(TIMEOUT_INCREMENT);
+                if (i < DATA_NUMBER_OF_RETRIES) {
+                    mLogger.Log(LogLevel::INFO, "Attempt failed, retry...");
+                    delay(TIMEOUT_INCREMENT);
+                }
+                else
+                {
+                    mLogger.Log(LogLevel::INFO, "Attempt failed");
+                }
             }
         }
     }

@@ -11,6 +11,11 @@
  * \brief   Packet parser, concatenates incoming data into packets, provides
  *          validation and creates events on received messages.
  *
+ * \note    The use of COBS is considered to handle framing errors, but since
+ *          we use TCP/IP this is not needed.
+ *          https://en.wikipedia.org/wiki/Consistent_Overhead_Byte_Stuffing
+ *          https://www.embeddedrelated.com/showarticle/113.php
+ *
  * \author  T. Louwers <terry.louwers@fourtress.nl>
  * \date    05-2022
  */
@@ -18,8 +23,14 @@
 /************************************************************************/
 /* Includes                                                             */
 /************************************************************************/
-#include <cstring>
 #include "PacketParser.hpp"
+
+
+/************************************************************************/
+/* Constants                                                            */
+/************************************************************************/
+static constexpr uint8_t MINIMAL_PACKET_LENGTH = 3;     // Length + Command + CRC
+static constexpr uint8_t LENGTH_AND_CRC_BYTE   = 2;     // Length + CRC
 
 
 /************************************************************************/
@@ -52,14 +63,13 @@ PacketParser::~PacketParser()
  */
 void PacketParser::StoreData(const uint8_t* data, uint16_t length)
 {
-    mLogger.Log(LogLevel::INFO, "Storing data...");
+    if (data == nullptr) { mLogger.Log(LogLevel::ERROR, "Data is nullptr"); return; }
+    if (length == 0)     { mLogger.Log(LogLevel::ERROR, "Data length was 0, skipped"); return; }
 
-    if (data != nullptr)
+    mLogger.Log(LogLevel::INFO, "Storing data...");
+    for (auto i = 0; i < length; i++)
     {
-        for (auto i = 0; i < length; i++)
-        {
-            mBuffer.push(data[i]);
-        }
+        mBuffer.push(data[i]);
     }
 }
 
@@ -84,34 +94,35 @@ void PacketParser::Process()
         const uint8_t length = mBuffer.first();
 
         // Check there is enough data for a possible packet
-        if (length > 3)
+        if (length > MINIMAL_PACKET_LENGTH)
         {
             if (mBuffer.size() >= length)
             {
                 // Extract specified length as possible packet
-                uint8_t content[length - 2] = {};               // Command + data
-                for (uint8_t i = 0; i < (length - 2); i++)
+                uint8_t content[length - LENGTH_AND_CRC_BYTE] = {};     // (leaves only Command + data)
+                for (uint8_t i = 0; i < (length - LENGTH_AND_CRC_BYTE); i++)
                 {
                     content[i] = mBuffer[i];
                 }
 
                 // Check CRC
                 mCrc.reset();
-                mCrc.add(content, (length - 2));
+                mCrc.add(content, (length - LENGTH_AND_CRC_BYTE));
                 uint8_t checksum = mCrc.getCRC();
                 uint8_t checksumInPacket = mBuffer[length - 1];
 
                 if (checksum == checksumInPacket)
                 {
-                    // If correct then get packet from buffer
+                    // If CRC correct then remove packet from buffer
                     for (uint8_t i = 0; i < length; i++)
                     {
                         mBuffer.pop();
                     }
 
+                    // Pass Command + data to handler
                     if (mHandler)
                     {
-                        mHandler(content, length - 2);
+                        mHandler(content, (length - LENGTH_AND_CRC_BYTE));
                     }
                 }
                 else
@@ -128,7 +139,7 @@ void PacketParser::Process()
         }
         else
         {
-            // length not enough to be a complete packet
+            // Length not enough to be a complete packet
             mBuffer.pop();
         }
     }
